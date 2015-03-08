@@ -39,20 +39,18 @@ def fuchsian(root, limit):
     for parent in ancestors:
         nextGen = transform(parent)
         validGen = check(nextGen, limit)
-        ancestors.append(validGen)
+        ancestors.extend(validGen)
     return ancestors
 
 # input: quadList (list of quadruples)
 # output: actual (list of all the values of the input list)
 # creates a list of unique curvatures
 def valuesOf(quadList):
-    possible, actual = [], []
+    possible = set()
     for ruple in quadList:
         for value in ruple:
-            possible.append(value)
-    maybe = set(possible)
-    for element in maybe:
-        actual.append(element)
+            possible.add(value)
+    actual = list( possible )
     return actual
 
 # input: quad (a quadruple), orbit (list of admissible quadruples)
@@ -92,8 +90,7 @@ def genealogy(seed):
         newGeneration, orbit = transformOrbit(parent, orbit)
         # print("orbit: ", orbit)
         # print("newGeneration: ", newGeneration)
-        for offspring in newGeneration:
-            ancestors.append(offspring)
+        ancestors.extend(newGeneration)
     return orbit
 
 # input: valList (admissible values of the packing), top (arbitrary limit)
@@ -113,14 +110,15 @@ def path(valList, top):
 # output: gone (list of admissible values that DO NOT appear in the packing, though they should)
 # host function for the last block of code, finds gone, the list we're looking for
 def seek(root, cap):
-    vecRoot = vector(ZZ, root)
+    #vecRoot = vector(ZZ, root)
     small = fuchsian(root, cap)
     valuesPack = valuesOf(small)
     admissible = genealogy(root)
-    print("genealogy results:")
-    print(admissible)
+    #print("genealogy results:")
+    #print(admissible)
     valuesOrbit = valuesOf(admissible)
     valuesGlobal = path(valuesOrbit, cap)
     nope = set( valuesGlobal ).difference( valuesPack )
-    missing = sorted( list(nope) )
+    missing =  list(nope)
+    missing.sort()
     return missing
