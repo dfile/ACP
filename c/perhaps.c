@@ -21,30 +21,30 @@ struct LinkedListArray* transform(int quad[4]) {
     struct NodeArray *soln = NULL;
     if ((-a + (2 * (b + c + d))) > a) {
         soln = nodeArrayInit();
-        memcpy(soln->val, 
-                (int [4]){(-a + (2 * (b + c + d))), b, c, d},
-                4*sizeof(int));
+        memcpy((soln->val), 
+                ((int [4]){(-a + (2 * (b + c + d))), b, c, d}),
+                (4*sizeof(int)));
         llaAppend(solutions, soln);
     }
     if ((-b + (2 * (a + c + d))) > b) {
         soln = nodeArrayInit();
-        memcpy(soln->val, 
-                (int [4]){a, (-b + (2 * (a + c + d))), c, d},
-                4*sizeof(int));
+        memcpy((soln->val), 
+               ((int [4]){a, (-b + (2 * (a + c + d))), c, d}),
+               (4*sizeof(int)));
         llaAppend(solutions, soln);
     }
     if ((-c + (2 * (a + b + d))) > c) {
         soln = nodeArrayInit();
-        memcpy(soln->val, 
-                (int [4]){a, b, (-c + (2 * (a + b + d))), d},
-                4*sizeof(int));
+        memcpy((soln->val), 
+                ((int [4]){a, b, (-c + (2 * (a + b + d))), d}),
+                (4*sizeof(int)));
         llaAppend(solutions, soln);
     }
     if ((-d + (2 * (a + b + c))) > d) {
         soln = nodeArrayInit();
-        memcpy(soln->val, 
-                (int [4]){a, b, c, (-d + (2 * (a + b + c)))},
-                4*sizeof(int));
+        memcpy((soln->val), 
+                ((int [4]){a, b, c, (-d + (2 * (a + b + c)))}),
+                (4*sizeof(int)));
         llaAppend(solutions, soln);
     }
 
