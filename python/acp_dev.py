@@ -1,3 +1,7 @@
+#import the deque class
+from collections import deque
+
+
 #Global list of all curvatures in the packing
 CURVELIST = set()
 
@@ -6,13 +10,15 @@ CURVELIST = set()
 # function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 # check to make sure the new curvature is under the limit
 def transform(quad, limit):
-    solutions = []
+    solutions = deque()
     a, b, c, d = quad[0], quad[1], quad[2], quad[3]
+    twice = 2*( a + b + c + d)
+    
     transformed = [0, 0, 0, 0]
-    transformed[0]= -a + (2 * (b + c + d))
-    transformed[1]= -b + (2 * (a + c + d))
-    transformed[2]= -c + (2 * (a + b + d))
-    transformed[3]= -d + (2 * (a + b + c))
+    transformed[0]= -3*a + twice
+    transformed[1]= -3*b + twice
+    transformed[2]= -3*c + twice
+    transformed[3]= -3*d + twice
     
     for i in range(4):
         if quad[i] < transformed[i]< limit:
@@ -27,7 +33,7 @@ def transform(quad, limit):
 # input: root (the initial quadruple that defines the packing), limit (arbitrary limit on curvatures we don't want to go above)
 # output: ancestors (list of quadruples all below the limit)
 def fuchsian(root, limit):
-    ancestors = []
+    ancestors = deque()
     ancestors.append(root)
     while( len( ancestors) > 0):
         ancestors.extend( transform( ancestors.pop() , limit ) )
