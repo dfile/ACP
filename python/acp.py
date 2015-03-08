@@ -31,18 +31,15 @@ def check(quadList, ceiling):
             validQuads.append(quadruple)
     return validQuads
 
-# input: root (the initial quadruple that defines the packing), limit (arbitrary limit we don't want to go above)
+# input: root (the initial quadruple that defines the packing), limit (arbitrary limit on curvatures we don't want to go above)
 # output: ancestors (list of quadruples all below the limit)
 def fuchsian(root, limit):
     ancestors = []
     ancestors.append(root)
-    keepGoing = True
-    while keepGoing:
-        for parent in ancestors:
-            nextGen = transform(parent)
-            validGen = check(nextGen, limit)
-            ancestors.append(validGen)
-        keepGoing = False
+    for parent in ancestors:
+        nextGen = transform(parent)
+        validGen = check(nextGen, limit)
+        ancestors.append(validGen)
     return ancestors
 
 # input: quadList (list of quadruples)
@@ -63,15 +60,14 @@ def valuesOf(quadList):
 # define orbit: An orbit of a circle packing is all quadruples mod 24 which any quadruple in the packing will be equivalent to, no matter how far out you go. We're interested in finding orbits of arbitrary packings so we can check curvatures in them against it
 def transformOrbit(quad, orbit):
     solutions = []
+    family = [-1, -1, -1 ,-1]
     a, b, c, d = quad[0], quad[1], quad[2], quad[3]
     
     # the four matrices
-    aPrime = [(-a + (2 * (b + c + d))) % 24, b % 24, c % 24, d % 24]
-    bPrime = [a % 24, (-b + (2 * (a + c + d))) % 24, c % 24, d % 24]
-    cPrime = [a % 24, b % 24, (-c + (2 * (a + b + d))) % 24, d % 24]
-    dPrime = [a % 24, b % 24, c % 24, (-d + (2 * (a + b + c))) % 24]
-    # print("aPrime = ", aPrime, " bPrime = ", bPrime, " cPrime = ", cPrime, " dPrime = ", dPrime);
-    family = [aPrime, bPrime, cPrime, dPrime]
+    family[0] = [(-a + (2 * (b + c + d))) % 24, b % 24, c % 24, d % 24]
+    family[1] = [a % 24, (-b + (2 * (a + c + d))) % 24, c % 24, d % 24]
+    family[2] = [a % 24, b % 24, (-c + (2 * (a + b + d))) % 24, d % 24]
+    family[3] = [a % 24, b % 24, c % 24, (-d + (2 * (a + b + c))) % 24]
     # print ("original orbit: ", orbit)
     for kid in family:
         if kid in orbit:
@@ -92,32 +88,13 @@ def genealogy(seed):
         # print("modSeed[i] = " , modSeed[i]);
     ancestors.append(modSeed)
     orbit.append(modSeed)
-    keepGoing = True
-    while keepGoing:
-        for parent in ancestors:
-            newGeneration, orbit = transformOrbit(parent, orbit)
-            # print("orbit: ", orbit)
-            # print("newGeneration: ", newGeneration)
-            for offspring in newGeneration:
-                ancestors.append(offspring)
-        keepGoing = False
+    for parent in ancestors:
+        newGeneration, orbit = transformOrbit(parent, orbit)
+        # print("orbit: ", orbit)
+        # print("newGeneration: ", newGeneration)
+        for offspring in newGeneration:
+            ancestors.append(offspring)
     return orbit
-
-# input: valsPack (list of values in the packing, obtained from fuchsian()), valsOrb (list of values in the orbit of a packing, obtained from genealogy()), limit (arbitrary limit we don't want to go above)
-# output: missing (list of admissible curvatures which do NOT appear in the packing even though they should!!!!!!SHIFT+1!!!). tHIS IS THE REAL deal here. This is what all of this is meant to find. This is it. Srsly.
-def compare(valsPack, valsOrb, limit):
-    missing = []
-    should = path(valsOrb, limit)
-    # The reason compare is so slow is that the valsPack is always
-    # searched in its entirety in every iteration of the for loop => O(n^2).
-    # We should use a more efficient data structure such as a hashed set or a
-    # binary search tree => ~O(1) or O(log(n)), respectively.
-    for might in should:
-        if might in valsPack:
-            pass
-        else:
-            missing.append(might)
-    return missing
 
 # input: valList (admissible values of the packing), top (arbitrary limit)
 # output: could (list of admissible values up to our arbitrary limit)
@@ -143,5 +120,7 @@ def seek(root, cap):
     print("genealogy results:")
     print(admissible)
     valuesOrbit = valuesOf(admissible)
-    gone = compare(valuesPack, valuesOrbit, cap)
-    return gone
+    valuesGlobal = path(valuesOrbit, cap)
+    nope = set( valuesGlobal ).difference( valuesPack )
+    missing = sorted( list(nope) )
+    return missing
