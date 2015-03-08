@@ -19,7 +19,7 @@ def transform(quad, limit):
             prime = quad[:]
             prime[i] = transformed[i]
             solutions.append(prime)
-            CURVELIST.add( transformed[i])
+            CURVELIST.add( transformed[i] )
             
     return solutions
 
@@ -29,9 +29,8 @@ def transform(quad, limit):
 def fuchsian(root, limit):
     ancestors = []
     ancestors.append(root)
-    for parent in ancestors:
-        nextGen = transform(parent , limit)
-        ancestors.extend(nextGen)
+    while( len( ancestors) > 0):
+        ancestors.extend( transform( ancestors.pop() , limit ) )
     return #ancestors
 
 # input: quadList (list of quadruples)
@@ -101,15 +100,17 @@ def path(valList, top):
 # output: gone (list of admissible values that DO NOT appear in the packing, though they should)
 # host function for the last block of code, finds gone, the list we're looking for
 def seek(root, cap):
+    print "running with ceiling " + str(cap) + " and root " + str( root )
     #vecRoot = vector(ZZ, root)
+    for i in range(4):
+        CURVELIST.add(root[i])
     fuchsian(root, cap)
-    valuesPack = valuesOf(small)
     admissible = genealogy(root)
     #print("genealogy results:")
     #print(admissible)
     valuesOrbit = valuesOf(admissible)
     valuesGlobal = path(valuesOrbit, cap)
-    nope = valuesGlobal.difference( valuesPack )
+    nope = valuesGlobal.difference( CURVELIST )
     missing =  list(nope)
     missing.sort()
     return missing
