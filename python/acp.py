@@ -41,8 +41,7 @@ def fuchsian(root, limit):
         for parent in ancestors:
             nextGen = transform(parent)
             validGen = check(nextGen, limit)
-            for child in validGen:
-                ancestors.append(child)
+            ancestors.append(validGen)
         keepGoing = False
     return ancestors
 
