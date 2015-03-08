@@ -1,0 +1,4 @@
+#!/bin/bash
+# build perhaps with dependencies
+
+gcc -o perhaps -g perhaps.c LinkedList.c LinkedListArray.c hashsetint.c
