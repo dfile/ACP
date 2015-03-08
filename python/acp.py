@@ -39,7 +39,7 @@ def fuchsian(root, limit):
     for parent in ancestors:
         nextGen = transform(parent)
         validGen = check(nextGen, limit)
-        ancestors.append(validGen)
+        ancestors.extend(validGen)
     return ancestors
 
 # input: quadList (list of quadruples)
