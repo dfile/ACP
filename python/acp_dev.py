@@ -1,3 +1,5 @@
+#Global list of all curvatures in the packing
+CURVELIST = set()
 
 # input: quad (a quadruple of curvatures), limit is the maximum curvature allowable
 # output: solutions (list of transformed quadruples)
@@ -6,18 +8,19 @@
 def transform(quad, limit):
     solutions = []
     a, b, c, d = quad[0], quad[1], quad[2], quad[3]
-    if a < (-a + (2 * (b + c + d))) < limit :
-        aPrime = [(-a + (2 * (b + c + d))), b, c, d]
-        solutions.append(aPrime)
-    if b < (-b + (2 * (a + c + d))) < limit:
-        bPrime = [a, (-b + (2 * (a + c + d))), c, d]
-        solutions.append(bPrime)
-    if c < (-c + (2 * (a + b + d))) < limit:
-        cPrime = [a, b, (-c + (2 * (a + b + d))), d]
-        solutions.append(cPrime)
-    if d < (-d + (2 * (a + b + c))) < limit:
-        dPrime = [a, b, c, (-d + (2 * (a + b + c)))]
-        solutions.append(dPrime)
+    transformed = [0, 0, 0, 0]
+    transformed[0]= -a + (2 * (b + c + d))
+    transformed[1]= -b + (2 * (a + c + d))
+    transformed[2]= -c + (2 * (a + b + d))
+    transformed[3]= -d + (2 * (a + b + c))
+    
+    for i in range(4):
+        if quad[i] < transformed[i]< limit:
+            prime = quad[:]
+            prime[i] = transformed[i]
+            solutions.append(prime)
+            CURVELIST.add( transformed[i])
+            
     return solutions
 
 
@@ -29,7 +32,7 @@ def fuchsian(root, limit):
     for parent in ancestors:
         nextGen = transform(parent , limit)
         ancestors.extend(nextGen)
-    return ancestors
+    return #ancestors
 
 # input: quadList (list of quadruples)
 # output: actual (list of all the values of the input list)
@@ -99,7 +102,7 @@ def path(valList, top):
 # host function for the last block of code, finds gone, the list we're looking for
 def seek(root, cap):
     #vecRoot = vector(ZZ, root)
-    small = fuchsian(root, cap)
+    fuchsian(root, cap)
     valuesPack = valuesOf(small)
     admissible = genealogy(root)
     #print("genealogy results:")
