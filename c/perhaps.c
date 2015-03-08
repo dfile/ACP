@@ -212,6 +212,10 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
             // If memcmp finds family[i] in orbit, match will be 0, so
             // multiplying by 0 will always give 0, and match will end
             // up as 0.
+            int j = 0;
+            printf("Comparing ["); for (j = 0; j < 4; j++) { printf("%d,", family[i][j]); } printf("] ");
+            printf("against "); nodeArrayPrint(ptr);
+
             match = match * memcmp(family[i], ptr->val, 4*sizeof(int));
         }
         // If family[i] was not in orbit, append it to orbit
