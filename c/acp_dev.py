@@ -120,11 +120,21 @@ def seek(root, cap):
     valuesOrbit = valuesOf(admissible)
     # print valuesOrbit
     valuesGlobal = path(valuesOrbit, cap)
-    print valuesGlobal
+    # print valuesGlobal
     nope = valuesGlobal.difference( CURVELIST )
     missing =  list(nope)
     missing.sort()
     print missing
     return missing
 
-seek([-1,2,2,3], 1000)
+seek([-1,2,2,3], 1000000)
+
+"""
+import cProfile, pstats
+pr = cProfile.Profile()
+# pr.runctx('seek([-1, 2, 2, 3], 100000)', globals(), locals()) # globals() and locals() have to do with namespaces (look into later)
+# Using runcall instead of runctx to keep it consistent with Cython profiler. For our purposes there are no real differences between using one or the other.
+pr.runcall(seek, [-1, 2, 2, 3], 1000000)
+ps = pstats.Stats(pr) # .sort_stats('tottime')
+ps.print_stats()
+"""

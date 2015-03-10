@@ -345,10 +345,10 @@ struct LinkedList* path(struct LinkedList *valList, int top) {
 struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsOrb, int limit) {
 
     struct LinkedList *missing = llInit();
-    printf("About to call path. valsOrb: ");
+    //printf("About to call path. valsOrb: ");
     llPrint(valsOrb);
     struct LinkedList *should = path(valsOrb, limit);
-    printf("Path results: "); llPrint(should);
+    //printf("Path results: "); llPrint(should);
     hashset_t valsPackSet = hashset_create();
     struct Node *might = NULL;
     struct Node *ptr = NULL;
@@ -375,18 +375,18 @@ struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsO
 struct LinkedList* seek(int root[4], int cap)
 {
 
-    printf("In seek\n");
+    //printf("In seek\n");
     struct LinkedListArray *small = fuchsian(root, cap);
-    printf("  fuchsian results - matches with acp python code \n");
+    //printf("  fuchsian results - matches with acp python code \n");
     //llaPrint(small);
     struct LinkedList *valuesPack = valuesOf(small);
-    printf("  valuesOf results from fuchsian - matches with acp python code \n");
+    //printf("  valuesOf results from fuchsian - matches with acp python code \n");
     //llPrint(valuesPack);
     struct LinkedListArray *admissible = genealogy(root);
-    printf("  genealogy results - matches with acp python code\n");
+    //printf("  genealogy results - matches with acp python code\n");
     //llaPrint(admissible);
     struct LinkedList *valuesOrbit = valuesOf(admissible);
-    printf("  valuesOf results from genealogy - mathces with acp python code\n");
+    //printf("  valuesOf results from genealogy - mathces with acp python code\n");
     //llPrint(valuesOrbit);
     struct LinkedList *gone = compare(valuesPack, valuesOrbit, cap);
 
@@ -395,10 +395,15 @@ struct LinkedList* seek(int root[4], int cap)
 
 void main(void) {
 
-    printf("Running perhaps...\n");
-
     int root[4] = {-1, 2, 2, 3};
-    struct LinkedList *results = seek(root, 1000);
+    int index = 0;
+    int ceiling = 1000000;
+
+    printf("Running seek with root {");
+    for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
+    printf("} and ceiling %d\n", ceiling);
+
+    struct LinkedList *results = seek(root, ceiling);
     llPrint(results);
 
 }  
