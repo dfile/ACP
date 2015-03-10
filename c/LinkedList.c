@@ -130,7 +130,11 @@ void llPrint(struct LinkedList *ll) {
     struct Node *ptr;
     printf("\n[ ");
     for (ptr = ll->header; ptr != NULL; ptr = ptr->next) {
-        printf("%d <=> ", ptr->val);
+        printf("(%d ", ptr->val);
+        if (ptr->prev == NULL) { printf("N"); }
+        else { printf("S"); }
+        if (ptr->next == NULL) { printf("N"); }
+        else { printf("S)"); }
     }
     printf("NULL ]\n");
 }

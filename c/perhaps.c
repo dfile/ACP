@@ -162,7 +162,7 @@ struct LinkedList* valuesOf(struct LinkedListArray* quadList) {
 // Only returns solutions, not an updated orbit because orbit is actually modified in this function since it's a pointer
 struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbit) {
     
-    printf(">>transformOrbit<<\n\n");
+    //printf(">>transformOrbit<<\n\n");
     struct LinkedListArray *solutions = llaInit();
     int a = quad[0];
     int b = quad[1];
@@ -208,20 +208,21 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
     {
         for (ptr = orbit->header; ptr != NULL; ptr = ptr->next)
         {
-            // There's something wrong with this function
             // If memcmp finds family[i] in orbit, match will be 0, so
             // multiplying by 0 will always give 0, and match will end
             // up as 0.
             int j = 0;
-            printf("Comparing ["); for (j = 0; j < 4; j++) { printf("%d,", family[i][j]); } printf("] ");
-            printf("against "); nodeArrayPrint(ptr);
+            //printf("Comparing ["); for (j = 0; j < 4; j++) { printf("%d,", family[i][j]); } printf("] ");
+            //printf("against "); nodeArrayPrint(ptr);
 
             match = match * memcmp(family[i], ptr->val, 4*sizeof(int));
+
+            //printf(" %d\n", match);
         }
         // If family[i] was not in orbit, append it to orbit
         if (match != 0)
         {
-            printf("Appending array to orbit\n");
+            //printf("Appending array to orbit\n");
             struct NodeArray *kid = nodeArrayInit();
             memcpy(kid->val,
                     family[i],
@@ -240,19 +241,19 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
         else
         {
             int j = 0;
-            printf("This array: [");
+            //printf("This array: [");
             for (j = 0; j < 4; j++)
             {
                 printf("%d,", family[i][j]);
             }
-            printf("] ");
-            printf(" matched one or more array in orbit.");
-            llaPrint(orbit);
+            //printf("] ");
+            //printf(" matched one or more array in orbit.");
+            //llaPrint(orbit);
         }
         match = 1;
     }
 
-    printf(">>End transformOrbit<<\n\n");
+    //printf(">>End transformOrbit<<\n\n");
     return solutions;
 
 }
@@ -372,12 +373,14 @@ struct LinkedList* seek(int root[4], int cap)
     printf("  fuchsian results - matches with perhaps python code \n");
     //llaPrint(small);
     struct LinkedList *valuesPack = valuesOf(small);
-    printf("  valuesOf results - matches with perhaps python code \n");
+    printf("  valuesOf results from fuchsian - matches with perhaps python code \n");
     //llPrint(valuesPack);
     struct LinkedListArray *admissible = genealogy(root);
-    printf("  genealogy results:\n");
-    llaPrint(admissible);
+    printf("  genealogy results - matches with perhaps python code\n");
+    //llaPrint(admissible);
     struct LinkedList *valuesOrbit = valuesOf(admissible);
+    printf("  valuesOf results from genealogy:\n");
+    llPrint(valuesOrbit);
     struct LinkedList *gone = compare(valuesPack, valuesOrbit, cap);
 
     return gone;
