@@ -238,18 +238,20 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
 
             llaAppend(solutions, kid1);
         }
+        /*
         else
         {
             int j = 0;
             //printf("This array: [");
             for (j = 0; j < 4; j++)
             {
-                printf("%d,", family[i][j]);
+                //printf("%d,", family[i][j]);
             }
             //printf("] ");
             //printf(" matched one or more array in orbit.");
             //llaPrint(orbit);
         }
+        */
         match = 1;
     }
 
@@ -323,13 +325,16 @@ struct LinkedList* path(struct LinkedList *valList, int top) {
     {
         for (poss = valList->header; poss != NULL; poss = poss->next)
         {
+            //printf("Comparing %d (%d) and %d\n", i, i % 24, poss->val);
             if ((i % 24) == poss->val)
             {
+                //printf("added\n");
                 struct Node *possCopy = nodeInit();
                 possCopy->val = i;
                 llAppend(could, possCopy);
+                //hashset_add(could, i);
+                break;
             }
-            break;
         }
     }
 
@@ -340,7 +345,10 @@ struct LinkedList* path(struct LinkedList *valList, int top) {
 struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsOrb, int limit) {
 
     struct LinkedList *missing = llInit();
+    printf("About to call path. valsOrb: ");
+    llPrint(valsOrb);
     struct LinkedList *should = path(valsOrb, limit);
+    printf("Path results: "); llPrint(should);
     hashset_t valsPackSet = hashset_create();
     struct Node *might = NULL;
     struct Node *ptr = NULL;
@@ -352,7 +360,6 @@ struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsO
 
     for (might = should->header; might != NULL; might = might->next)
     {
-        // Hashset doesn't work here (refer to valuesOf())
         if (hashset_is_member(valsPackSet, (might->val)) == 0)
         {
             struct Node *node = nodeInit();
@@ -370,17 +377,17 @@ struct LinkedList* seek(int root[4], int cap)
 
     printf("In seek\n");
     struct LinkedListArray *small = fuchsian(root, cap);
-    printf("  fuchsian results - matches with perhaps python code \n");
+    printf("  fuchsian results - matches with acp python code \n");
     //llaPrint(small);
     struct LinkedList *valuesPack = valuesOf(small);
-    printf("  valuesOf results from fuchsian - matches with perhaps python code \n");
+    printf("  valuesOf results from fuchsian - matches with acp python code \n");
     //llPrint(valuesPack);
     struct LinkedListArray *admissible = genealogy(root);
-    printf("  genealogy results - matches with perhaps python code\n");
+    printf("  genealogy results - matches with acp python code\n");
     //llaPrint(admissible);
     struct LinkedList *valuesOrbit = valuesOf(admissible);
-    printf("  valuesOf results from genealogy:\n");
-    llPrint(valuesOrbit);
+    printf("  valuesOf results from genealogy - mathces with acp python code\n");
+    //llPrint(valuesOrbit);
     struct LinkedList *gone = compare(valuesPack, valuesOrbit, cap);
 
     return gone;

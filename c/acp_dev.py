@@ -92,11 +92,14 @@ def genealogy(seed):
 # input: valList (admissible values of the packing), top (arbitrary limit)
 # output: could (list of admissible values up to our arbitrary limit)
 def path(valList, top):
+    print "In path"
     could = set()
     i = 0
     while i < top:
         for poss in valList:
+            # print "Comparing " + str(i) + " (" + str(i % 24) + ")" + " and " + str(poss)
             if (i % 24) == poss:
+                # print "added"
                 could.add(i)
                 break
         i += 1
@@ -112,10 +115,12 @@ def seek(root, cap):
         CURVELIST.add(root[i])
     fuchsian(root, cap)
     admissible = genealogy(root)
-    print("genealogy results:")
-    print(admissible)
+    # print("genealogy results:")
+    # print(admissible)
     valuesOrbit = valuesOf(admissible)
+    # print valuesOrbit
     valuesGlobal = path(valuesOrbit, cap)
+    print valuesGlobal
     nope = valuesGlobal.difference( CURVELIST )
     missing =  list(nope)
     missing.sort()

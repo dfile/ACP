@@ -133,8 +133,8 @@ void llPrint(struct LinkedList *ll) {
         printf("(%d ", ptr->val);
         if (ptr->prev == NULL) { printf("N"); }
         else { printf("S"); }
-        if (ptr->next == NULL) { printf("N"); }
-        else { printf("S)"); }
+        if (ptr->next == NULL) { printf("N) "); }
+        else { printf("S) "); }
     }
     printf("NULL ]\n");
 }
