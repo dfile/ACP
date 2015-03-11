@@ -1,4 +1,4 @@
 #!/bin/bash
-# build perhaps with dependencies, -g gdb capapbility, -pg gprof capability
+# build acp with dependencies, -g gdb capapbility, -pg gprof capability
 
-gcc -pg -o perhaps -g perhaps.c LinkedList.c LinkedListArray.c hashsetint.c
+gcc -pg -o acp -g acp.c LinkedList.c LinkedListArray.c hashsetint.c

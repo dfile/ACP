@@ -397,7 +397,7 @@ void main(void) {
 
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
-    int ceiling = 1000000;
+    int ceiling = 2000000;
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
