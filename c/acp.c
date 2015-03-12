@@ -12,7 +12,7 @@
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 struct LinkedListArray* transform(int quad[4]) {
-
+	// We should combine transform and check
     struct LinkedListArray *solutions = llaInit();
     int a = quad[0];
     int b = quad[1];
@@ -116,7 +116,8 @@ struct LinkedListArray* fuchsian(int root[4], int limit) {
         memcpy(parentArray,
                 parent->val,
                 4*sizeof(int));
-        struct LinkedListArray *nextGen = transform(parentArray);
+				// We need to remove parentArray from *ancestors after we transform(*ancestors)
+        struct LinkedListArray *nextGen = transform(parentArray);//We can combine transfrom and check
         struct LinkedListArray *validGen = check(nextGen, limit);
         for (child = validGen->header; child != NULL; child = child->next)
         {
