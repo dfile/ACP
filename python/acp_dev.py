@@ -24,20 +24,22 @@ def transform(quad, limit):
         if quad[i] < transformed[i]< limit:
             prime = quad[:]
             prime[i] = transformed[i]
-            solutions.append(prime)
             CURVELIST.add( transformed[i] )
+            transform(prime, limit)
             
-    return solutions
+    # return solutions
 
 
 # input: root (the initial quadruple that defines the packing), limit (arbitrary limit on curvatures we don't want to go above)
 # output: ancestors (list of quadruples all below the limit)
+"""
 def fuchsian(root, limit):
     ancestors = deque()
     ancestors.append(root)
     while( len( ancestors) > 0):
         ancestors.extend( transform( ancestors.pop() , limit ) )
     return #ancestors
+"""
 
 # input: quadList (list of quadruples)
 # output: actual (list of all the values of the input list)
@@ -110,7 +112,8 @@ def seek(root, cap):
     #vecRoot = vector(ZZ, root)
     for i in range(4):
         CURVELIST.add(root[i])
-    fuchsian(root, cap)
+    transform(root, cap)
+    # fuchsian(root, cap)
     admissible = genealogy(root)
     #print("genealogy results:")
     #print(admissible)
@@ -120,3 +123,5 @@ def seek(root, cap):
     missing =  list(nope)
     missing.sort()
     return missing
+
+print seek([-1, 2, 2, 3], 1000000)
