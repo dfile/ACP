@@ -12,7 +12,7 @@
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 struct LinkedListArray* transform(int quad[4]) {
-	// We should combine transform and check
+	// TODO: We should combine transform and check
     struct LinkedListArray *solutions = llaInit();
     int a = quad[0];
     int b = quad[1];
@@ -116,8 +116,8 @@ struct LinkedListArray* fuchsian(int root[4], int limit) {
         memcpy(parentArray,
                 parent->val,
                 4*sizeof(int));
-				// We need to remove parentArray from *ancestors after we transform(*ancestors)
-        struct LinkedListArray *nextGen = transform(parentArray);//We can combine transfrom and check
+		// TODO: We need to remove parentArray from *ancestors after we transform(*ancestors)
+        struct LinkedListArray *nextGen = transform(parentArray); // TODO: We can combine transfrom and check
         struct LinkedListArray *validGen = check(nextGen, limit);
         for (child = validGen->header; child != NULL; child = child->next)
         {
@@ -144,9 +144,6 @@ struct LinkedList* valuesOf(struct LinkedListArray* quadList) {
     {
         for (i = 0; i < 4; i++)
         {
-            // Hashset never recognizes equal vals because it's comparing pointers, not values.
-            // Might need to implement a binary search tree instead. For now just do a SLOW search
-            // using linked lists.
             int exists = hashset_add(maybe, (ruple->val[i]));
             if (exists == 1)
             {
@@ -212,7 +209,7 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
             // If memcmp finds family[i] in orbit, match will be 0, so
             // multiplying by 0 will always give 0, and match will end
             // up as 0.
-            int j = 0;
+            // int j = 0;
             //printf("Comparing ["); for (j = 0; j < 4; j++) { printf("%d,", family[i][j]); } printf("] ");
             //printf("against "); nodeArrayPrint(ptr);
 
@@ -398,7 +395,7 @@ void main(void) {
 
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
-    int ceiling = 2000000;
+    int ceiling = 1000000;
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
