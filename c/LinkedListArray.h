@@ -19,6 +19,7 @@ struct NodeArray {
 struct LinkedListArray {
     struct NodeArray *header;
     struct NodeArray *tail;
+    int len;
 };
 
 // Create and return an empty linked list.
@@ -26,6 +27,9 @@ struct LinkedListArray* llaInit(void);
 
 // Create and return an empty node (value initialized to 0).
 struct NodeArray* nodeArrayInit(void);
+
+// Create and return a node with an array of 4 numbers.
+struct NodeArray* nodeArrayInitWithArray(int arr[4]);
 
 // Append a node to the back of a linked list.
 void llaAppend(struct LinkedListArray *lla, struct NodeArray *node);
@@ -38,6 +42,9 @@ struct NodeArray* llaPop(struct LinkedListArray *lla);
 
 // Remove and return node from back of list.
 struct NodeArray* llaPopBack(struct LinkedListArray *lla);
+
+// Extend a list by another list (extend lla by ext)
+void llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext);
 
 // Print a linked list from front to back.
 void llaPrint(struct LinkedListArray *lla);

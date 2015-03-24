@@ -122,12 +122,14 @@ def seek(root, cap):
     valuesGlobal = path(valuesOrbit, cap)
     # print valuesGlobal
     nope = valuesGlobal.difference( CURVELIST )
+    print nope
     missing =  list(nope)
     missing.sort()
     print missing
     return missing
 
-seek([-1,2,2,3], 1000000)
+seek([-1,2,2,3], 1000)
+print CURVELIST
 
 """
 import cProfile, pstats

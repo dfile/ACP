@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "LinkedListArray.h"
 
 // Create and return an empty linked list
@@ -7,11 +8,12 @@ struct LinkedListArray* llaInit(void) {
     struct LinkedListArray *list = malloc(sizeof(struct LinkedListArray));
     list->header = NULL;
     list->tail = NULL;
+    list->len = 0;
     return list;
 }
 
 // Create and return an empty node
-// Array is initialized with nulla elements.
+// Array is initialized with null elements.
 struct NodeArray* nodeArrayInit(void) {
     struct NodeArray *node = malloc(sizeof(struct NodeArray)); 
     int i;
@@ -24,15 +26,25 @@ struct NodeArray* nodeArrayInit(void) {
     return node;
 }
 
+// Create and return a node initialized with given array
+struct NodeArray* nodeArrayInitWithArray(int arr[4]) {
+    struct NodeArray *node = malloc(sizeof(struct NodeArray)); 
+    memcpy(node->val, arr, 4*sizeof(int));
+    node->next = NULL;
+    node->prev = NULL;
+    return node;
+}
+
 // Push node on front of list
 void llaPush(struct LinkedListArray *lla, struct NodeArray *node) {
     
-    // Make sure list and node are not nulla
+    // Make sure list and node are not null
     if (lla != NULL && node != NULL) {
         
         node->next = NULL;
         node->prev = NULL;
-        
+        lla->len = lla->len + 1;
+
         if (lla->header == NULL)       // list is empty
         {
             lla->header = node;
@@ -55,6 +67,7 @@ void llaAppend(struct LinkedListArray *lla, struct NodeArray *node) {
         
         node->next = NULL;
         node->prev = NULL;
+        lla->len = lla->len + 1;
         
         if (lla->header == NULL)       // list is empty
         {
@@ -79,7 +92,8 @@ struct NodeArray* llaPop(struct LinkedListArray *lla) {
         
         if (lla->header != NULL)  // lla is not empty
         {
-            struct NodeArray *nodeToPop = lla->header;
+            lla->len = lla->len - 1;
+            struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->header->val);
             lla->header = lla->header->next;
             
             if (lla->header == NULL)    // nodeToPop was only element in lla
@@ -92,7 +106,7 @@ struct NodeArray* llaPop(struct LinkedListArray *lla) {
             
     }
     
-    return NULL;        // catch-alla return nulla
+    return NULL;        // catch-all return null
 }
 
 // Remove and return node from back of list
@@ -103,7 +117,8 @@ struct NodeArray* llaPopBack(struct LinkedListArray *lla) {
         
         if (lla->tail != NULL)  // lla is not empty
         {
-            struct NodeArray *nodeToPop = lla->tail;
+            lla->len = lla->len - 1;
+            struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->tail->val);
             lla->tail = lla->tail->prev;
             
             if (lla->tail == NULL)    // nodeToPop was only element in lla
@@ -123,6 +138,30 @@ struct NodeArray* llaPopBack(struct LinkedListArray *lla) {
     return NULL;        // catch-alla return nulla
 }
 
+// TODO: This function was never tested, although it seems to work in acp.c
+void llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext) {
+    if (lla == NULL) { return; }
+    else if (ext == NULL) { return; }
+    else if (lla->len == 0)
+    {
+        lla->header = ext->header;
+        lla->tail = ext->tail;
+    }
+    else
+    {
+        lla->tail->next = ext->header;
+        if (ext->header != NULL)
+        {
+            ext->header->prev = lla->tail;
+        }
+        if (ext->tail != NULL)
+        {
+            lla->tail = ext->tail;
+        }
+    }
+    lla->len = lla->len + ext->len;
+}
+
 // Print a linked list using printf
 void llaPrint(struct LinkedListArray *lla) {
     
@@ -133,8 +172,8 @@ void llaPrint(struct LinkedListArray *lla) {
     }
     
     struct NodeArray *ptr;
-    int i;
-    printf("\n{ ");
+    //int i;
+    printf("\n Length=%d { ", lla->len);
     for (ptr = lla->header; ptr != NULL; ptr = ptr->next) {
 
         nodeArrayPrint(ptr);
