@@ -1,14 +1,14 @@
 // Set implemented as a byte array
 
 #ifndef SET_T_H_
-#define
+#define SET_T_H_
 
 typedef char byte;
 
 typedef struct set_s {
     byte *items;
     unsigned int num_items;
-    unsigned int zero;
+    int zero;
     unsigned int len;
 } set_t;
 
@@ -16,13 +16,13 @@ typedef struct set_s {
 
 set_t* setInit(void);
 
-//set_t* setInitWithLen(unsigned int len);
+// Use this initializer to make set_t's
+set_t* setInitWithLenAndZero(unsigned int len, int zero);
 
-//set_t* setInitWithZero(unsigned int zero);
+// Calculates len and zero point from the range
+set_t* setInitWithRange(int low, int high);
 
-set_t* setInitWithLenAndZero(unsigned int len, unsigned int zero);
-
-set_t* setInitWithLenAndZeroAndItems(byte *items, unsigned int len, unsigned int zero);
+set_t* setInitWithLenAndZeroAndItems(unsigned int len, int zero, byte *items);
 
 // Setters and Getters
 
@@ -35,15 +35,19 @@ void         setSetNumItems(set_t *s, unsigned int n);
 unsigned int setGetLen(set_t *s);
 void         setSetLen(set_t *s, unsigned int len);
 
-unsigned int setGetZero(set_t *s);
-void         setSetZero(set_t *s, unsigned int zero);
+int          setGetZero(set_t *s);
+void         setSetZero(set_t *s, int zero);
 
 // Set Element Operations
 
-unsigned int setAdd(set_t *s, unsigned int a);
+int          setAdd(set_t *s, int a);
 
-unsigned int setRemove(set_t *s, unsigned int a);
+int          setRemove(set_t *s, int r);
 
-char         setExists(set_t *s, unsigned int a);
+byte         setExists(set_t *s, int e);
+
+void         setPrint(set_t *s, byte opt);
+
+void         setClear(set_t *s);
 
 #endif
