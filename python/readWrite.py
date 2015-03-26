@@ -38,13 +38,13 @@ def seek( root, cap, maxCounter):
             infile.write( '\n' )
     
     
-    with open(FILESTRING, 'r') as infile:
+    with open(FILESTRING, 'rw') as infile:
         for line in infile:
             vec = string.split( line )
             for i in range(4):
                 vec[i] = int(vec[i])
             quadList.append(vec)
-            
+    
     print quadList
 
         
