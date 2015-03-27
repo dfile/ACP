@@ -38,6 +38,9 @@ void         setSetLen(set_t *s, unsigned int len);
 int          setGetZero(set_t *s);
 void         setSetZero(set_t *s, int zero);
 
+int          setGetLowRange(set_t *s);
+int          setGetHighRange(set_t *s);
+
 // Set Element Operations
 
 int          setAdd(set_t *s, int a);

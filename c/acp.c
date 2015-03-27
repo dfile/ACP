@@ -6,16 +6,14 @@
 #include <string.h>
 #include "LinkedListArray.h"
 #include "LinkedList.h"
+#include "set_t.h"
 //#include "hashsetint.h"
 
-#define ZERO 1
+#define LOW -1
 
-typedef char* set_t;
-set_t CURVELIST;
+set_t *CURVELIST;
 
 int ceiling;
-
-#define SET_CREATE() malloc(sizeof(char) * (ceiling + ZERO))
 
 // input: quad (a quadruple of curvatures)
 // output: solutions (list of transformed quadruples)
@@ -42,88 +40,12 @@ struct LinkedListArray* transform(int quad[4], int limit) {
             memcpy(prime, quad, 4*sizeof(int));
             prime[i] = transformed[i];
             llaAppend(solutions, nodeArrayInitWithArray(prime));
-            int index = (transformed[i] + ZERO);
-            CURVELIST[index] = 1;
+            setAdd(CURVELIST, transformed[i]);
         }
     }
 
     return solutions;
-    /*
-    struct NodeArray *soln = NULL;
-    if ((-a + (2 * (b + c + d))) > a) {
-        soln = nodeArrayInitWithArray(((int [4]){(-a + (2 * (b + c + d))), b, c, d}));
-        llaAppend(solutions, soln);
-    }
-    if ((-b + (2 * (a + c + d))) > b) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-               ((int [4]){a, (-b + (2 * (a + c + d))), c, d}),
-               (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-c + (2 * (a + b + d))) > c) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, (-c + (2 * (a + b + d))), d}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-d + (2 * (a + b + c))) > d) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, c, (-d + (2 * (a + b + c)))}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-
-    return solutions;
-    */
 }
-
-/**
- * input:  quadList (a list of quadruples)
- *         ceiling (the arbitrary limit we don't want to go above)
- * output: validQuads (list of quadruples where every curv is below the ceiling)
- */
-/*
-struct LinkedListArray* check(struct LinkedListArray *quadList, int ceiling) {
-
-    struct LinkedListArray *validQuads = llaInit();
-    struct NodeArray *validQuad = NULL;
-    struct NodeArray *quadrupleNode = NULL;
-    int entry;
-    int quadruple[4];
-    bool valid = true;
-
-    for (quadrupleNode = quadList->header; quadrupleNode != NULL; quadrupleNode = quadrupleNode->next)
-    {
-        valid = true;
-
-        // Copy array in quadrupleNode to quadruple
-        memcpy(quadruple, 
-                quadrupleNode->val,
-                4*sizeof(int));
-        for (entry = 0; entry < 4; entry++)
-        {
-            if (quadruple[entry] >=ceiling)
-            {
-                valid = false;
-            }
-        }
-        if (valid) {
-            validQuad = nodeArrayInit();
-
-            // Copy quadruple array to validQuad node
-            memcpy(validQuad->val, 
-                    quadruple,
-                    4*sizeof(int));
-            llaAppend(validQuads, validQuad);
-        }
-    }
-
-    return validQuads;
-}
-*/
 
 /**
  * input:  root (the initial quadruple that defines the packing)
@@ -145,43 +67,17 @@ void fuchsian(int root[4], int limit) {
     }
 
     return;
-    /*
-    struct NodeArray *parent = NULL;
-    struct NodeArray *child = NULL;
-    for (parent = ancestors->header; parent != NULL; parent = parent->next)
-    {
-        int parentArray[4];
-        memcpy(parentArray,
-                parent->val,
-                4*sizeof(int));
-		// TODO: We need to remove parentArray from *ancestors after we transform(*ancestors)
-        struct LinkedListArray *nextGen = transform(parentArray); // TODO: We can combine transfrom and check
-        struct LinkedListArray *validGen = check(nextGen, limit);
-        for (child = validGen->header; child != NULL; child = child->next)
-        {
-            struct NodeArray *childCopy = nodeArrayInit();
-            memcpy(childCopy->val,
-                    child->val,
-                    sizeof(child->val));
-            llaAppend(ancestors, childCopy);
-        }
-        free(nextGen);
-        free(validGen);
-    }
-
-    return ancestors;
-    */
 }
 
-set_t valuesOf(struct LinkedListArray* quadList) {
-    set_t possible = SET_CREATE();
+set_t* valuesOf(struct LinkedListArray* quadList) {
+    set_t *possible = setInitWithRange(LOW, ceiling);
     struct NodeArray *ruple = NULL;
     for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
     {
         unsigned char i;
         for (i = 0; i < 4; i++)
         {
-            possible[(ruple->val[i]) + ZERO] = 1;
+            setAdd(possible, ruple->val[i]);
         }
     }
 
@@ -269,41 +165,43 @@ struct LinkedListArray* genealogy(int seed[4]) {
 }
 
 // FIXME: something is wrong in here or in a previous function
-set_t path(set_t valList, int top) {
+set_t* path(set_t *valList, int top) {
 
-    set_t could = SET_CREATE();
+    set_t *could = setInitWithRange(LOW, ceiling);
 
     int i = 0;
     for (i = 0; i < top; i++)
     {
-        int j = 0;
-        for (j = 0; j < (ceiling + ZERO); j++)
-        {
+        // int j = 0;
+        // for (j = LOW; j < ceiling; j++)
+        // {
             // TODO: does this mod really do what I think it does? (check if negative)
             if ((i % 24) < 0) { printf("mod in path was negative"); }
-            if ((i % 24) == valList[j])
+            if (setExists(valList, (i % 24)))
             {
-                could[i + ZERO] = 1;
-                break;
+                setAdd(could, i);
+                // break;
             }
-        }
+        // }
     }
 
     return could;
 
 }
 
-set_t compare(set_t valuesGlobal) {
+set_t* compare(set_t *valuesGlobal) {
 
-    set_t missing = SET_CREATE();
+    set_t *missing = setInitWithRange(LOW, ceiling);
     int i = 0;
-    for (i = 0; i < (ceiling + ZERO); i++)
+    for (i = LOW; i < ceiling; i++)
     {
-        printf("valuesGlobal[%d] = %d  :  CURVELIST[%d] = %d", i, valuesGlobal[i], i, CURVELIST[i]);
-        if ((valuesGlobal[i] != 0) && (valuesGlobal[i] != CURVELIST[i]))
+        printf("valuesGlobal[%d] = %d  :  CURVELIST[%d] = %d", i, setExists(valuesGlobal, i), i, setExists(CURVELIST, i));
+        // if ((valuesGlobal[i] != 0) && (valuesGlobal[i] != CURVELIST[i]))
+        if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
             printf(" - unique to valuesGlobal, adding to missing\n");
-            missing[i] = 1;
+            //missing[i] = 1;
+            setAdd(missing, i);
         }
         else
         {
@@ -311,42 +209,19 @@ set_t compare(set_t valuesGlobal) {
         }
     }
 
-    /*
-    struct LinkedList *missing = llInit();
-    //printf("About to call path. valsOrb: ");
-    llPrint(valsOrb);
-    struct LinkedList *should = path(valsOrb, limit);
-    //printf("Path results: "); llPrint(should);
-    hashset_t valsPackSet = hashset_create();
-    struct Node *might = NULL;
-    struct Node *ptr = NULL;
-
-    for (ptr = valsPack->header; ptr != NULL; ptr = ptr->next)
-    {
-        hashset_add(valsPackSet, (ptr->val));
-    }
-
-    for (might = should->header; might != NULL; might = might->next)
-    {
-        if (hashset_is_member(valsPackSet, (might->val)) == 0)
-        {
-            struct Node *node = nodeInit();
-            node->val = might->val;
-            llAppend(missing, node);
-        }
-    }
-    */
     return missing;
 
 }
 
-struct LinkedList* seek(int root[4], int cap)
+set_t* seek(int root[4], int cap)
 {
+
     int globalCount = 0;
     for (globalCount = 0; globalCount < 4; globalCount++)
     {
-        CURVELIST[root[globalCount] + ZERO] = 1;
-    }
+        // CURVELIST[root[globalCount] + ZERO] = 1;
+        setAdd(CURVELIST, root[globalCount]);
+    } 
     
     //printf("In seek\n");
     fuchsian(root, cap);
@@ -358,15 +233,15 @@ struct LinkedList* seek(int root[4], int cap)
     struct LinkedListArray *admissible = genealogy(root);
     //printf("  genealogy results - matches with acp python code\n");
     //llaPrint(admissible);
-    set_t valuesOrbit = valuesOf(admissible);
+    set_t *valuesOrbit = valuesOf(admissible);
     //printf("  valuesOf results from genealogy - mathces with acp python code\n");
     //llPrint(valuesOrbit);
-    set_t valuesGlobal = path(valuesOrbit, cap);
-    set_t nope = compare(valuesGlobal);
-
+    set_t *valuesGlobal = path(valuesOrbit, cap);
+    set_t *nope = compare(valuesGlobal);
+/*
     // FIXME: nope is way off. check path.
     printf("nope: {\n");
-    for (globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
     {
         printf("index: %d  value: %d\n", globalCount, (char)nope[globalCount]);
     }
@@ -374,7 +249,7 @@ struct LinkedList* seek(int root[4], int cap)
 
     // CURVELIST looks correct
     printf("CURVELIST: {\n");
-    for (globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
     {
         printf("index: %d  value: %d\n", globalCount, (char)CURVELIST[globalCount]);
     }
@@ -382,7 +257,7 @@ struct LinkedList* seek(int root[4], int cap)
 
     struct LinkedList *missing = llInit();
     int i = 0;
-    for (globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
     {
         if (nope[globalCount] == 1)
         {
@@ -394,6 +269,9 @@ struct LinkedList* seek(int root[4], int cap)
     }
 
     return missing;
+
+*/
+    return nope;
 }
 
 int main(void) {
@@ -401,13 +279,15 @@ int main(void) {
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
     ceiling = 1000;
-    CURVELIST = SET_CREATE();
+    CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
     printf("} and ceiling %d\n", ceiling);
 
-    struct LinkedList *results = seek(root, ceiling);
+    set_t *results = seek(root, ceiling);
+    setPrint(results, 0);
+    //struct LinkedList *results = seek(root, ceiling);
     //llPrint(results);
 
     return 0;
