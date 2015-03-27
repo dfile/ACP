@@ -6,16 +6,20 @@
 #include <string.h>
 #include "LinkedListArray.h"
 #include "LinkedList.h"
-#include "hashsetint.h"
+#include "set_t.h"
+//#include "hashsetint.h"
+
+int LOW;
+
+set_t *CURVELIST;
+
+int ceiling;
 
 // input: quad (a quadruple of curvatures)
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
-
-hashset_t CURVELIST;
-
 struct LinkedListArray* transform(int quad[4], int limit) {
-	// TODO: We should combine transform and check struct LinkedListArray *solutions = llaInit();
+    struct LinkedListArray *solutions = llaInit();
     int a = quad[0], b = quad[1], c = quad[2], d = quad[3];
     int twice = (a + b + c + d) << 1; // very quick way to multiply by 2
 
@@ -28,148 +32,52 @@ struct LinkedListArray* transform(int quad[4], int limit) {
     int i = 0;
     for (i = 0; i < 4; i++)
     {
-        if (quad[i] < transformed[i] < limit)
+        if (    (quad[i] < transformed[i]) 
+             && (quad[i] < limit)
+             && (transformed[i] < limit))
         {
             int prime[4];
             memcpy(prime, quad, 4*sizeof(int));
             prime[i] = transformed[i];
             llaAppend(solutions, nodeArrayInitWithArray(prime));
-            hashset_add(CURVELIST, transformed[i]);
+            setAdd(CURVELIST, transformed[i]);
         }
     }
 
     return solutions;
-    /*
-    struct NodeArray *soln = NULL;
-    if ((-a + (2 * (b + c + d))) > a) {
-        soln = nodeArrayInitWithArray(((int [4]){(-a + (2 * (b + c + d))), b, c, d}));
-        llaAppend(solutions, soln);
-    }
-    if ((-b + (2 * (a + c + d))) > b) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-               ((int [4]){a, (-b + (2 * (a + c + d))), c, d}),
-               (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-c + (2 * (a + b + d))) > c) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, (-c + (2 * (a + b + d))), d}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-d + (2 * (a + b + c))) > d) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, c, (-d + (2 * (a + b + c)))}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-
-    return solutions;
-    */
 }
-
-/**
- * input:  quadList (a list of quadruples)
- *         ceiling (the arbitrary limit we don't want to go above)
- * output: validQuads (list of quadruples where every curv is below the ceiling)
- */
-/*
-struct LinkedListArray* check(struct LinkedListArray *quadList, int ceiling) {
-
-    struct LinkedListArray *validQuads = llaInit();
-    struct NodeArray *validQuad = NULL;
-    struct NodeArray *quadrupleNode = NULL;
-    int entry;
-    int quadruple[4];
-    bool valid = true;
-
-    for (quadrupleNode = quadList->header; quadrupleNode != NULL; quadrupleNode = quadrupleNode->next)
-    {
-        valid = true;
-
-        // Copy array in quadrupleNode to quadruple
-        memcpy(quadruple, 
-                quadrupleNode->val,
-                4*sizeof(int));
-        for (entry = 0; entry < 4; entry++)
-        {
-            if (quadruple[entry] >=ceiling)
-            {
-                valid = false;
-            }
-        }
-        if (valid) {
-            validQuad = nodeArrayInit();
-
-            // Copy quadruple array to validQuad node
-            memcpy(validQuad->val, 
-                    quadruple,
-                    4*sizeof(int));
-            llaAppend(validQuads, validQuad);
-        }
-    }
-
-    return validQuads;
-}
-*/
 
 /**
  * input:  root (the initial quadruple that defines the packing)
  *         limit (arbitrary limit we don't want to go above)
  * output: ancestors (list of quadruples all below the limit)
  */
-struct LinkedListArray* fuchsian(int root[4], int limit) {
-
+void fuchsian(int root[4], int limit) {
     struct LinkedListArray *ancestors = llaInit();
     llaAppend(ancestors, nodeArrayInitWithArray(root));
 
     while (ancestors->len > 0)
     {
+        //printf("ancestors before extend has len=%d and elements:", ancestors->len);
+        //llaPrint(ancestors);
         llaExtend( ancestors, transform((llaPop(ancestors)->val), limit) );
+        //printf("ancestors after extend has len=%d and elements:", ancestors->len);
+        //llaPrint(ancestors);
+        //printf("\n");
     }
 
     return;
-    /*
-    struct NodeArray *parent = NULL;
-    struct NodeArray *child = NULL;
-    for (parent = ancestors->header; parent != NULL; parent = parent->next)
-    {
-        int parentArray[4];
-        memcpy(parentArray,
-                parent->val,
-                4*sizeof(int));
-		// TODO: We need to remove parentArray from *ancestors after we transform(*ancestors)
-        struct LinkedListArray *nextGen = transform(parentArray); // TODO: We can combine transfrom and check
-        struct LinkedListArray *validGen = check(nextGen, limit);
-        for (child = validGen->header; child != NULL; child = child->next)
-        {
-            struct NodeArray *childCopy = nodeArrayInit();
-            memcpy(childCopy->val,
-                    child->val,
-                    sizeof(child->val));
-            llaAppend(ancestors, childCopy);
-        }
-        free(nextGen);
-        free(validGen);
-    }
-
-    return ancestors;
-    */
 }
 
-hashset_t valuesOf(struct LinkedListArray* quadList) {
-
+set_t* valuesOf(struct LinkedListArray* quadList) {
+    set_t *possible = setInitWithRange(LOW, ceiling);
     struct NodeArray *ruple = NULL;
-    hashset_t possible = hashset_create();
-    int i;
     for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
     {
+        unsigned char i;
         for (i = 0; i < 4; i++)
         {
-            hashset_add(possible, (ruple->val[i]));
+            setAdd(possible, ruple->val[i]);
         }
     }
 
@@ -178,10 +86,9 @@ hashset_t valuesOf(struct LinkedListArray* quadList) {
 
 // Only returns solutions, not an updated orbit because orbit is actually modified in this function since it's a pointer
 struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbit) {
-    
     struct LinkedListArray *solutions = llaInit();
-    int a = quad[0], b = quad[1], c = quad[2], d = quad[3];
     int family[4][4];
+    int a = quad[0], b = quad[1], c = quad[2], d = quad[3];
  
     int aPos = (-a + (2 * (b + c + d))) % 24;
     int bPos = (-b + (2 * (a + c + d))) % 24;
@@ -195,12 +102,12 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
     dPos = dPos < 0 ? dPos + 24 : dPos;
 
     // the four matrices
-    family[0] = (int [4]){aPos,   b % 24, c % 24, d % 24};
-    family[1] = (int [4]){a % 24, bPos,   c % 24, d % 24};
-    family[2] = (int [4]){a % 24, b % 24, cPos,   d % 24};
-    family[3] = (int [4]){a % 24, b % 24, c % 24, dPos};
+    memcpy(family[0], ((int [4]){aPos,   b % 24, c % 24, d % 24}), 4*sizeof(int));
+    memcpy(family[1], ((int [4]){a % 24, bPos,   c % 24, d % 24}), 4*sizeof(int));
+    memcpy(family[2], ((int [4]){a % 24, b % 24, cPos,   d % 24}), 4*sizeof(int));
+    memcpy(family[3], ((int [4]){a % 24, b % 24, c % 24, dPos}),   4*sizeof(int));
 
-    unsigned int i;
+    unsigned char i;
     int match = 1;
     for (i = 0; i < 4; i++)
     {
@@ -230,7 +137,6 @@ struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbi
 }
 
 struct LinkedListArray* genealogy(int seed[4]) {
-
     struct LinkedListArray *ancestors = llaInit();
     struct LinkedListArray *orbit = llaInit();
     int modSeed[4] = {0};
@@ -258,51 +164,48 @@ struct LinkedListArray* genealogy(int seed[4]) {
 
 }
 
-struct LinkedList* path(struct LinkedList *valList, int top) {
+// FIXME: something is wrong in here or in a previous function
+set_t* path(set_t *valList, int top) {
 
-    hashset_t could = hashset_create();
+    set_t *could = setInitWithRange(LOW, ceiling);
 
     int i = 0;
     for (i = 0; i < top; i++)
     {
-        struct Node *poss = NULL;
-        for (poss = valList->header; poss != NULL; poss = poss->next)
-        {
-            if ((i % 24) == poss->val)
+        // int j = 0;
+        // for (j = LOW; j < ceiling; j++)
+        // {
+            // TODO: does this mod really do what I think it does? (check if negative)
+            if ((i % 24) < 0) { printf("mod in path was negative"); }
+            if (setExists(valList, (i % 24)))
             {
-                hashset_add(could, i);
-                break;
+                setAdd(could, i);
+                // break;
             }
-        }
+        // }
     }
 
     return could;
 
 }
 
-struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsOrb, int limit) {
+set_t* compare(set_t *valuesGlobal) {
 
-    struct LinkedList *missing = llInit();
-    //printf("About to call path. valsOrb: ");
-    llPrint(valsOrb);
-    struct LinkedList *should = path(valsOrb, limit);
-    //printf("Path results: "); llPrint(should);
-    hashset_t valsPackSet = hashset_create();
-    struct Node *might = NULL;
-    struct Node *ptr = NULL;
-
-    for (ptr = valsPack->header; ptr != NULL; ptr = ptr->next)
+    set_t *missing = setInitWithRange(LOW, ceiling);
+    int i = 0;
+    for (i = LOW; i < ceiling; i++)
     {
-        hashset_add(valsPackSet, (ptr->val));
-    }
-
-    for (might = should->header; might != NULL; might = might->next)
-    {
-        if (hashset_is_member(valsPackSet, (might->val)) == 0)
+        printf("valuesGlobal[%d] = %d  :  CURVELIST[%d] = %d", i, setExists(valuesGlobal, i), i, setExists(CURVELIST, i));
+        // if ((valuesGlobal[i] != 0) && (valuesGlobal[i] != CURVELIST[i]))
+        if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
-            struct Node *node = nodeInit();
-            node->val = might->val;
-            llAppend(missing, node);
+            printf(" - unique to valuesGlobal, adding to missing\n");
+            //missing[i] = 1;
+            setAdd(missing, i);
+        }
+        else
+        {
+            printf(" - not added to missing\n");
         }
     }
 
@@ -310,38 +213,83 @@ struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsO
 
 }
 
-struct LinkedList* seek(int root[4], int cap)
+set_t* seek(int root[4], int cap)
 {
 
+    int globalCount = 0;
+    for (globalCount = 0; globalCount < 4; globalCount++)
+    {
+        // CURVELIST[root[globalCount] + ZERO] = 1;
+        setAdd(CURVELIST, root[globalCount]);
+    } 
+    
     //printf("In seek\n");
-    struct LinkedListArray *small = fuchsian(root, cap);
+    fuchsian(root, cap);
     //printf("  fuchsian results - matches with acp python code \n");
     //llaPrint(small);
-    struct LinkedList *valuesPack = valuesOf(small);
+    //struct LinkedList *valuesPack = valuesOf(small);
     //printf("  valuesOf results from fuchsian - matches with acp python code \n");
     //llPrint(valuesPack);
     struct LinkedListArray *admissible = genealogy(root);
     //printf("  genealogy results - matches with acp python code\n");
     //llaPrint(admissible);
-    struct LinkedList *valuesOrbit = valuesOf(admissible);
+    set_t *valuesOrbit = valuesOf(admissible);
     //printf("  valuesOf results from genealogy - mathces with acp python code\n");
     //llPrint(valuesOrbit);
-    struct LinkedList *gone = compare(valuesPack, valuesOrbit, cap);
+    set_t *valuesGlobal = path(valuesOrbit, cap);
+    set_t *nope = compare(valuesGlobal);
+/*
+    // FIXME: nope is way off. check path.
+    printf("nope: {\n");
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    {
+        printf("index: %d  value: %d\n", globalCount, (char)nope[globalCount]);
+    }
+    printf("}\n");
 
-    return gone;
+    // CURVELIST looks correct
+    printf("CURVELIST: {\n");
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    {
+        printf("index: %d  value: %d\n", globalCount, (char)CURVELIST[globalCount]);
+    }
+    printf("}\n");
+
+    struct LinkedList *missing = llInit();
+    int i = 0;
+    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
+    {
+        if (nope[globalCount] == 1)
+        {
+            struct Node *node = nodeInit();
+            node->val = i - ZERO;
+            llAppend(missing, node);
+            free(node);
+        }
+    }
+
+    return missing;
+
+*/
+    return nope;
 }
 
-void main(void) {
+int main(void) {
 
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
-    int ceiling = 1000000;
+    ceiling = 1000000;
+    LOW = -1;  // the smallest curvature in root quad, used to determine set_t range
+    CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
     printf("} and ceiling %d\n", ceiling);
 
-    struct LinkedList *results = seek(root, ceiling);
-    llPrint(results);
+    set_t *results = seek(root, ceiling);
+    setPrint(results, 0);
+    //struct LinkedList *results = seek(root, ceiling);
+    //llPrint(results);
 
+    return 0;
 }  

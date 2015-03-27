@@ -7,9 +7,8 @@
 #include "LinkedListArray.h"
 #include "LinkedList.h"
 #include "set_t.h"
-//#include "hashsetint.h"
 
-#define LOW -1
+int LOW;
 
 set_t *CURVELIST;
 
@@ -58,14 +57,13 @@ void fuchsian(int root[4], int limit) {
 
     while (ancestors->len > 0)
     {
-        //printf("ancestors before extend has len=%d and elements:", ancestors->len);
-        //llaPrint(ancestors);
-        llaExtend( ancestors, transform((llaPop(ancestors)->val), limit) );
-        //printf("ancestors after extend has len=%d and elements:", ancestors->len);
-        //llaPrint(ancestors);
-        //printf("\n");
+        struct NodeArray *n = llaPop(ancestors);
+        int a[4];
+        memcpy(a, n->val, 4*sizeof(int));
+        llaExtend( ancestors, transform(a, limit) );
+        free(n);
     }
-
+    free(ancestors);
     return;
 }
 
@@ -164,7 +162,6 @@ struct LinkedListArray* genealogy(int seed[4]) {
 
 }
 
-// FIXME: something is wrong in here or in a previous function
 set_t* path(set_t *valList, int top) {
 
     set_t *could = setInitWithRange(LOW, ceiling);
@@ -172,17 +169,12 @@ set_t* path(set_t *valList, int top) {
     int i = 0;
     for (i = 0; i < top; i++)
     {
-        // int j = 0;
-        // for (j = LOW; j < ceiling; j++)
-        // {
-            // TODO: does this mod really do what I think it does? (check if negative)
+            // Alert user if result of mod is negative (it shouldn't be)
             if ((i % 24) < 0) { printf("mod in path was negative"); }
             if (setExists(valList, (i % 24)))
             {
                 setAdd(could, i);
-                // break;
             }
-        // }
     }
 
     return could;
@@ -193,19 +185,11 @@ set_t* compare(set_t *valuesGlobal) {
 
     set_t *missing = setInitWithRange(LOW, ceiling);
     int i = 0;
-    for (i = LOW; i < ceiling; i++)
+    for (i = LOW; i <= ceiling; i++)
     {
-        printf("valuesGlobal[%d] = %d  :  CURVELIST[%d] = %d", i, setExists(valuesGlobal, i), i, setExists(CURVELIST, i));
-        // if ((valuesGlobal[i] != 0) && (valuesGlobal[i] != CURVELIST[i]))
         if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
-            printf(" - unique to valuesGlobal, adding to missing\n");
-            //missing[i] = 1;
             setAdd(missing, i);
-        }
-        else
-        {
-            printf(" - not added to missing\n");
         }
     }
 
@@ -219,58 +203,22 @@ set_t* seek(int root[4], int cap)
     int globalCount = 0;
     for (globalCount = 0; globalCount < 4; globalCount++)
     {
-        // CURVELIST[root[globalCount] + ZERO] = 1;
         setAdd(CURVELIST, root[globalCount]);
     } 
     
-    //printf("In seek\n");
+    printf("In seek\n");
+    printf("Running fuchsian\n");
     fuchsian(root, cap);
-    //printf("  fuchsian results - matches with acp python code \n");
-    //llaPrint(small);
-    //struct LinkedList *valuesPack = valuesOf(small);
-    //printf("  valuesOf results from fuchsian - matches with acp python code \n");
-    //llPrint(valuesPack);
+    printf("CURVELIST num_items: %d\n", setGetNumItems(CURVELIST));
+    printf("Running genealogy\n");
     struct LinkedListArray *admissible = genealogy(root);
-    //printf("  genealogy results - matches with acp python code\n");
-    //llaPrint(admissible);
+    printf("Running valuesOf\n");
     set_t *valuesOrbit = valuesOf(admissible);
-    //printf("  valuesOf results from genealogy - mathces with acp python code\n");
-    //llPrint(valuesOrbit);
+    free(admissible);
+    printf("Running path\n");
     set_t *valuesGlobal = path(valuesOrbit, cap);
+    printf("Running compare\n");
     set_t *nope = compare(valuesGlobal);
-/*
-    // FIXME: nope is way off. check path.
-    printf("nope: {\n");
-    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
-    {
-        printf("index: %d  value: %d\n", globalCount, (char)nope[globalCount]);
-    }
-    printf("}\n");
-
-    // CURVELIST looks correct
-    printf("CURVELIST: {\n");
-    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
-    {
-        printf("index: %d  value: %d\n", globalCount, (char)CURVELIST[globalCount]);
-    }
-    printf("}\n");
-
-    struct LinkedList *missing = llInit();
-    int i = 0;
-    for (int globalCount = 0; globalCount < (ceiling + ZERO); globalCount++)
-    {
-        if (nope[globalCount] == 1)
-        {
-            struct Node *node = nodeInit();
-            node->val = i - ZERO;
-            llAppend(missing, node);
-            free(node);
-        }
-    }
-
-    return missing;
-
-*/
     return nope;
 }
 
@@ -279,6 +227,7 @@ int main(void) {
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
     ceiling = 1000;
+    LOW = -1;  // the smallest curvature in root quad, used to determine set_t range
     CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
@@ -287,8 +236,6 @@ int main(void) {
 
     set_t *results = seek(root, ceiling);
     setPrint(results, 0);
-    //struct LinkedList *results = seek(root, ceiling);
-    //llPrint(results);
 
     return 0;
 }  

@@ -93,7 +93,8 @@ struct NodeArray* llaPop(struct LinkedListArray *lla) {
         if (lla->header != NULL)  // lla is not empty
         {
             lla->len = lla->len - 1;
-            struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->header->val);
+            // struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->header->val);
+            struct NodeArray *nodeToPop = lla->header;
             lla->header = lla->header->next;
             
             if (lla->header == NULL)    // nodeToPop was only element in lla

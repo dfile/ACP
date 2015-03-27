@@ -1,0 +1,144 @@
+[mm247666@mathcs c]$ valgrind --tool=memcheck --leak-check=full acp
+==10116== Memcheck, a memory error detector
+==10116== Copyright (C) 2002-2010, and GNU GPL'd, by Julian Seward et al.
+==10116== Using Valgrind-3.6.0 and LibVEX; rerun with -h for copyright info
+==10116== Command: acp
+==10116== 
+Running seek with root {-1,2,2,3,} and ceiling 1000
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049D6E: setAdd (set_t.c:178)
+==10116==    by 0x8049032: seek (acp.c:206)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+In seek
+Running fuchsian
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049D6E: setAdd (set_t.c:178)
+==10116==    by 0x8048792: transform (acp.c:42)
+==10116==    by 0x804880E: fuchsian (acp.c:63)
+==10116==    by 0x8049066: seek (acp.c:211)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+CURVELIST num_items: 325
+Running genealogy
+Running valuesOf
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049D6E: setAdd (set_t.c:178)
+==10116==    by 0x8048895: valuesOf (acp.c:78)
+==10116==    by 0x80490B5: seek (acp.c:216)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+Running path
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8048F4A: path (acp.c:174)
+==10116==    by 0x80490E1: seek (acp.c:219)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049D6E: setAdd (set_t.c:178)
+==10116==    by 0x8048F5D: path (acp.c:176)
+==10116==    by 0x80490E1: seek (acp.c:219)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+Running compare
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8048FBD: compare (acp.c:190)
+==10116==    by 0x80490FB: seek (acp.c:221)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8048FD5: compare (acp.c:190)
+==10116==    by 0x80490FB: seek (acp.c:221)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049D6E: setAdd (set_t.c:178)
+==10116==    by 0x8048FE8: compare (acp.c:192)
+==10116==    by 0x80490FB: seek (acp.c:221)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+Set num_items: 9
+Set zero: 1
+Set len: 1002
+Set range: [-1 to 1000]
+==10116== Conditional jump or move depends on uninitialised value(s)
+==10116==    at 0x8049FA0: setPrintDefault (set_t.c:241)
+==10116==    by 0x804A1DD: setPrint (set_t.c:291)
+==10116==    by 0x80491E9: main (acp.c:238)
+==10116== 
+Set items: [78,159,207,243,246,342,435,603,711,]
+==10116== 
+==10116== HEAP SUMMARY:
+==10116==     in use at exit: 35,296 bytes in 1,712 blocks
+==10116==   total heap usage: 3,378 allocs, 1,666 frees, 75,262 bytes allocated
+==10116== 
+==10116== 156 bytes in 13 blocks are definitely lost in loss record 3 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80494B2: llaInit (LinkedListArray.c:8)
+==10116==    by 0x80488C8: transformOrbit (acp.c:87)
+==10116==    by 0x8048E7C: genealogy (acp.c:157)
+==10116==    by 0x804909B: seek (acp.c:214)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 312 (24 direct, 288 indirect) bytes in 1 blocks are definitely lost in loss record 6 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x8049543: nodeArrayInitWithArray (LinkedListArray.c:31)
+==10116==    by 0x8048E4A: genealogy (acp.c:152)
+==10116==    by 0x804909B: seek (acp.c:214)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 324 (12 direct, 312 indirect) bytes in 1 blocks are definitely lost in loss record 7 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80494B2: llaInit (LinkedListArray.c:8)
+==10116==    by 0x8048D9F: genealogy (acp.c:138)
+==10116==    by 0x804909B: seek (acp.c:214)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 1,018 (16 direct, 1,002 indirect) bytes in 1 blocks are definitely lost in loss record 12 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80499DA: setInitWithLenAndZeroAndItems (set_t.c:30)
+==10116==    by 0x8049988: setInitWithLenAndZero (set_t.c:16)
+==10116==    by 0x80499C1: setInitWithRange (set_t.c:24)
+==10116==    by 0x8048862: valuesOf (acp.c:71)
+==10116==    by 0x80490B5: seek (acp.c:216)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 1,018 (16 direct, 1,002 indirect) bytes in 1 blocks are definitely lost in loss record 13 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80499DA: setInitWithLenAndZeroAndItems (set_t.c:30)
+==10116==    by 0x8049988: setInitWithLenAndZero (set_t.c:16)
+==10116==    by 0x80499C1: setInitWithRange (set_t.c:24)
+==10116==    by 0x8048ECB: path (acp.c:167)
+==10116==    by 0x80490E1: seek (acp.c:219)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 1,018 (16 direct, 1,002 indirect) bytes in 1 blocks are definitely lost in loss record 14 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80499DA: setInitWithLenAndZeroAndItems (set_t.c:30)
+==10116==    by 0x8049988: setInitWithLenAndZero (set_t.c:16)
+==10116==    by 0x80499C1: setInitWithRange (set_t.c:24)
+==10116==    by 0x8048F94: compare (acp.c:186)
+==10116==    by 0x80490FB: seek (acp.c:221)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== 19,956 bytes in 1,663 blocks are definitely lost in loss record 16 of 16
+==10116==    at 0x400682F: malloc (vg_replace_malloc.c:236)
+==10116==    by 0x80494B2: llaInit (LinkedListArray.c:8)
+==10116==    by 0x8048653: transform (acp.c:21)
+==10116==    by 0x804880E: fuchsian (acp.c:63)
+==10116==    by 0x8049066: seek (acp.c:211)
+==10116==    by 0x80491D1: main (acp.c:237)
+==10116== 
+==10116== LEAK SUMMARY:
+==10116==    definitely lost: 20,196 bytes in 1,681 blocks
+==10116==    indirectly lost: 3,606 bytes in 28 blocks
+==10116==      possibly lost: 0 bytes in 0 blocks
+==10116==    still reachable: 11,494 bytes in 3 blocks
+==10116==         suppressed: 0 bytes in 0 blocks
+==10116== Reachable blocks (those to which a pointer was found) are not shown.
+==10116== To see them, rerun with: --leak-check=full --show-reachable=yes
+==10116== 
+==10116== For counts of detected and suppressed errors, rerun with: -v
+==10116== Use --track-origins=yes to see where uninitialised values come from
+==10116== ERROR SUMMARY: 3059 errors from 16 contexts (suppressed: 12 from 8)
+Profiling timer expired
