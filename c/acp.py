@@ -121,4 +121,4 @@ def seek(root, cap):
     missing.sort()
     return missing
 
-print seek([-1,2,2,3], 1000)
+print seek([-1,2,2,3], 1000000)

@@ -13,7 +13,25 @@ set_t* setInit(void)
 // This is the initializer that should be used when making sets
 set_t* setInitWithLenAndZero(unsigned int len, int zero)
 {
-    return setInitWithLenAndZeroAndItems(len, zero, (byte *)malloc(sizeof(byte) * (len)));
+    //byte *b = (byte *)calloc(len, sizeof(byte) * (len));
+    // for some reason calloc can't allocate memory as large
+    // as malloc can, so instead malloc the array and set
+    // each index to be 0.
+    byte *b = (byte *)malloc(sizeof(byte) * (len));
+    int i;
+    if (b == NULL) 
+    {
+        printf("Couldn't malloc in setInitWithLenAndZero()\n");
+    }
+    else
+    {
+        for (i = 0; i < len; i++)
+        {
+            b[i] = 0;
+        }
+    }
+    set_t *s = setInitWithLenAndZeroAndItems(len, zero, b);
+    return s;
 }
 
 // Use this initializer too
@@ -33,6 +51,14 @@ set_t* setInitWithLenAndZeroAndItems(unsigned int len, int zero, byte *items)
     setSetLen(set, len);
     setSetZero(set, zero);
     return set;
+}
+
+// Uninitializer
+void setDestroy(set_t *s)
+{
+    if (s == NULL) { return; }
+    free(s->items);
+    free(s);
 }
 
 //(byte *)malloc(sizeof(byte) * (len + zero))

@@ -25,11 +25,17 @@ struct LinkedListArray {
 // Create and return an empty linked list.
 struct LinkedListArray* llaInit(void);
 
+// Destroy linked list and the nodes it contains
+void llaDestroy(struct LinkedListArray *lla);
+
 // Create and return an empty node (value initialized to 0).
 struct NodeArray* nodeArrayInit(void);
 
 // Create and return a node with an array of 4 numbers.
 struct NodeArray* nodeArrayInitWithArray(int arr[4]);
+
+// Destroy a nodeArray and the array it contains
+void nodeArrayDestroy(struct NodeArray *node);
 
 // Append a node to the back of a linked list.
 void llaAppend(struct LinkedListArray *lla, struct NodeArray *node);

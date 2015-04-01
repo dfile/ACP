@@ -18,7 +18,13 @@ int ceiling;
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 struct LinkedListArray* transform(int quad[4], int limit) {
+//void transform(int quad[4], int limit, struct LinkedListArray *solutions) {
     struct LinkedListArray *solutions = llaInit();
+    //struct LinkedListArray solutions;
+    //solutions.header = NULL;
+    //solutions.tail = NULL;
+    //solutions.len = 0;
+
     int a = quad[0], b = quad[1], c = quad[2], d = quad[3];
     int twice = (a + b + c + d) << 1; // very quick way to multiply by 2
 
@@ -52,18 +58,50 @@ struct LinkedListArray* transform(int quad[4], int limit) {
  * output: ancestors (list of quadruples all below the limit)
  */
 void fuchsian(int root[4], int limit) {
-    struct LinkedListArray *ancestors = llaInit();
-    llaAppend(ancestors, nodeArrayInitWithArray(root));
+    //struct LinkedListArray *ancestors = llaInit();
+    struct LinkedListArray ancestors;
+    ancestors.header = NULL;
+    ancestors.tail = NULL;
+    ancestors.len = 0;
 
-    while (ancestors->len > 0)
+    llaAppend(&ancestors, nodeArrayInitWithArray(root));
+
+    while (ancestors.len > 0)
     {
-        struct NodeArray *n = llaPop(ancestors);
-        int a[4];
-        memcpy(a, n->val, 4*sizeof(int));
-        llaExtend( ancestors, transform(a, limit) );
-        free(n);
+        struct NodeArray *n = llaPop(&ancestors);
+        //int a[4];
+        //memcpy(a, n->val, 4*sizeof(int));
+        struct LinkedListArray *l = transform(n->val, limit);
+        //struct LinkedListArray l;
+        //l.header = NULL;
+        //l.tail = NULL;
+        //l.len = 0;
+
+        //transform(a, limit, &l);
+        //llaPrint(l);
+        //llaExtend( &ancestors, l );
+       
+        //printf("%d\n", l->header);
+        //printf("%d\n", l->tail);
+        //printf("%d\n", l->len);
+        while (1)
+        {
+            struct NodeArray *ptr = NULL;
+            ptr = llaPop(l);
+            if (ptr == NULL) { break; }
+            llaAppend(&ancestors, ptr);
+            //nodeArrayDestroy(ptr);
+        }
+        //llaPrint(l);
+        //printf("%d\n", l->header);
+        //printf("%d\n", l->tail);
+        //printf("%d\n", l->len);
+        free(l);
+        //llaDestroy(l);
+        nodeArrayDestroy(n);
     }
-    free(ancestors);
+    //llaDestroy(ancestors);
+
     return;
 }
 
@@ -156,7 +194,9 @@ struct LinkedListArray* genealogy(int seed[4]) {
     {
         struct LinkedListArray *newGeneration = transformOrbit(parent->val, orbit);
         llaExtend(ancestors, newGeneration);
+        free(newGeneration);
     }
+    llaDestroy(ancestors);
 
     return orbit;
 
@@ -207,26 +247,43 @@ set_t* seek(int root[4], int cap)
     } 
     
     printf("In seek\n");
+
     printf("Running fuchsian\n");
     fuchsian(root, cap);
     printf("CURVELIST num_items: %d\n", setGetNumItems(CURVELIST));
+    //setPrint(CURVELIST, 0);
+
     printf("Running genealogy\n");
     struct LinkedListArray *admissible = genealogy(root);
+    //llaPrint(admissible);
+
     printf("Running valuesOf\n");
     set_t *valuesOrbit = valuesOf(admissible);
-    free(admissible);
+    //setPrint(valuesOrbit, 0);
+
+    llaDestroy(admissible);
+
     printf("Running path\n");
     set_t *valuesGlobal = path(valuesOrbit, cap);
+
+    setDestroy(valuesOrbit);
+
     printf("Running compare\n");
     set_t *nope = compare(valuesGlobal);
+
+    setDestroy(valuesGlobal);
+    setDestroy(CURVELIST);
+
     return nope;
+
+    //return NULL;
 }
 
 int main(void) {
 
     int root[4] = {-1, 2, 2, 3};
     int index = 0;
-    ceiling = 1000;
+    ceiling = 50000000;
     LOW = -1;  // the smallest curvature in root quad, used to determine set_t range
     CURVELIST = setInitWithRange(LOW, ceiling);
 
@@ -236,6 +293,7 @@ int main(void) {
 
     set_t *results = seek(root, ceiling);
     setPrint(results, 0);
-
+    
+    setDestroy(results);
     return 0;
 }  

@@ -6,41 +6,93 @@
 // Create and return an empty linked list
 struct LinkedListArray* llaInit(void) {
     struct LinkedListArray *list = malloc(sizeof(struct LinkedListArray));
+
+    if (list == NULL)
+    {
+        printf("couldn't malloc in llaInit()\n");
+        return NULL;
+    }
+
     list->header = NULL;
     list->tail = NULL;
     list->len = 0;
     return list;
 }
 
+// Destroy a linked list and the nodes it contains
+void llaDestroy(struct LinkedListArray *lla)
+{
+    if (lla == NULL) { return; }
+    else if (lla->len != 0)
+    {
+        // delete each node in list
+        int i = 0;
+        struct NodeArray *temp;
+        for (i = 0; i < lla->len; i++)
+        {
+            temp = llaPop(lla);
+            nodeArrayDestroy(temp);
+        }
+    }
+    free(lla->header);
+    free(lla->tail);
+    free(lla);
+}
+
 // Create and return an empty node
 // Array is initialized with null elements.
 struct NodeArray* nodeArrayInit(void) {
-    struct NodeArray *node = malloc(sizeof(struct NodeArray)); 
-    int i;
-    for (i = 0; i < (sizeof(node->val) / sizeof(int)); i++)
+    struct NodeArray *node = nodeArrayInitWithArray(NULL);
+    if (node == NULL)
     {
-        node->val[i]=0;
+        printf("Couldn't malloc in nodeArrayInit()\n");
     }
-    node->next = NULL;
-    node->prev = NULL;
     return node;
 }
 
 // Create and return a node initialized with given array
 struct NodeArray* nodeArrayInitWithArray(int arr[4]) {
     struct NodeArray *node = malloc(sizeof(struct NodeArray)); 
-    memcpy(node->val, arr, 4*sizeof(int));
+
+    if (node == NULL)
+    {
+        printf("couldn't malloc in nodeArrayInitWithArray()\n");
+        return NULL;
+    }
+
+    if (arr == NULL)
+    {
+        int i;
+        for (i = 0; i < (sizeof(node->val) / sizeof(int)); i++)
+        {
+            node->val[i]=0;
+        }
+    }
+    else {
+        memcpy(node->val, arr, 4*sizeof(int));
+    }
+
     node->next = NULL;
     node->prev = NULL;
     return node;
 }
 
+// Free a nodeArray and the array it contains
+void nodeArrayDestroy(struct NodeArray *node)
+{
+    if (node == NULL) { return; }
+    //free(node->val);
+    free(node->prev);
+    free(node->next);
+    free(node);
+}
+
 // Push node on front of list
 void llaPush(struct LinkedListArray *lla, struct NodeArray *node) {
-    
+
     // Make sure list and node are not null
     if (lla != NULL && node != NULL) {
-        
+
         node->next = NULL;
         node->prev = NULL;
         lla->len = lla->len + 1;
@@ -61,14 +113,14 @@ void llaPush(struct LinkedListArray *lla, struct NodeArray *node) {
 
 // Append node to back of list
 void llaAppend(struct LinkedListArray *lla, struct NodeArray *node) {
-    
-    // Make sure list and node are not nulla
+
+    // Make sure list and node are not null
     if (lla != NULL && node != NULL) {
-        
+
         node->next = NULL;
         node->prev = NULL;
         lla->len = lla->len + 1;
-        
+
         if (lla->header == NULL)       // list is empty
         {
             lla->header = node;
@@ -86,57 +138,73 @@ void llaAppend(struct LinkedListArray *lla, struct NodeArray *node) {
 
 // Remove and return node from front of list
 struct NodeArray* llaPop(struct LinkedListArray *lla) {
-    
-    // Make sure list is not nulla
+
+    // Make sure list is not null
     if (lla != NULL) {
-        
+
         if (lla->header != NULL)  // lla is not empty
         {
             lla->len = lla->len - 1;
-            // struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->header->val);
+
             struct NodeArray *nodeToPop = lla->header;
             lla->header = lla->header->next;
-            
+
+            nodeToPop->prev = NULL;
+            nodeToPop->next = NULL;
+
             if (lla->header == NULL)    // nodeToPop was only element in lla
             {
                 lla->tail = NULL;
             }
-            
+            else
+            {
+                // nodeToPop wasn't only element, make header
+                // first node in list
+                lla->header->prev = NULL;
+            }
+
             return nodeToPop;
         }
-            
+
     }
-    
+
     return NULL;        // catch-all return null
 }
 
 // Remove and return node from back of list
 struct NodeArray* llaPopBack(struct LinkedListArray *lla) {
-    
-    // Make sure list is not nulla
+
+    // Make sure list is not null
     if (lla != NULL) {
-        
+
         if (lla->tail != NULL)  // lla is not empty
         {
             lla->len = lla->len - 1;
-            struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->tail->val);
+
+            struct NodeArray *nodeToPop = lla->tail;
+            //            struct NodeArray *nodeToPop = nodeArrayInitWithArray(lla->tail->val);
             lla->tail = lla->tail->prev;
-            
+
+            nodeToPop->prev = NULL;
+            nodeToPop->next = NULL;
+
             if (lla->tail == NULL)    // nodeToPop was only element in lla
             {
                 lla->header = NULL;
             }
-            else                    // safe to reference next member of tail
+            else
             {
+                // nodeToPop wasn't only element, make tail
+                // last node in list
                 lla->tail->next = NULL;
             }
-            
+
             return nodeToPop;
         }
-            
+
     }
-    
-    return NULL;        // catch-alla return nulla
+
+    return NULL;        // catch-all return null
 }
 
 // TODO: This function was never tested, although it seems to work in acp.c
@@ -165,13 +233,13 @@ void llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext) {
 
 // Print a linked list using printf
 void llaPrint(struct LinkedListArray *lla) {
-    
+
     if (lla == NULL)
     {
         printf("\nLinked list is NULL.\n");
         return;
     }
-    
+
     struct NodeArray *ptr;
     //int i;
     printf("\n Length=%d { ", lla->len);
@@ -199,8 +267,8 @@ void nodeArrayPrint(struct NodeArray *node) {
     {
         printf("[");
         for (i = 0; 
-             i < (sizeof(node->val) / sizeof(node->val[0]));
-             i++)
+                i < (sizeof(node->val) / sizeof(node->val[0]));
+                i++)
         {
             if (i + 1 == (sizeof(node->val) / sizeof(node->val[0])))
             {
@@ -214,7 +282,7 @@ void nodeArrayPrint(struct NodeArray *node) {
         printf("]");
         if (node->prev) { printf("S"); } else { printf("N"); }
         if (node->next) { printf("S"); } else { printf("N"); }
-        
+
     }
 
 }
