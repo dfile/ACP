@@ -1,4 +1,4 @@
 #!/bin/bash
 # run acp
 
-./acp
+./acp.bin $1

@@ -2,20 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include "LinkedListArray.h"
+#include "typedefs.h"
 
 // Create and return an empty linked list
 struct LinkedListArray* llaInit(void) {
+
+    //printf("malloc LinkedListArray struct: %d bytes\n", sizeof(struct LinkedListArray));
     struct LinkedListArray *list = malloc(sizeof(struct LinkedListArray));
 
     if (list == NULL)
     {
-        printf("couldn't malloc in llaInit()\n");
+        printf("ERR: couldn't malloc in llaInit()\n");
         return NULL;
     }
 
-    list->header = NULL;
-    list->tail = NULL;
-    list->len = 0;
+    memset(list, 0, sizeof(struct LinkedListArray));
+
     return list;
 }
 
@@ -26,7 +28,7 @@ void llaDestroy(struct LinkedListArray *lla)
     else if (lla->len != 0)
     {
         // delete each node in list
-        int i = 0;
+        number i = 0;
         struct NodeArray *temp;
         for (i = 0; i < lla->len; i++)
         {
@@ -34,8 +36,9 @@ void llaDestroy(struct LinkedListArray *lla)
             nodeArrayDestroy(temp);
         }
     }
-    free(lla->header);
-    free(lla->tail);
+    //free(lla->header);
+    //free(lla->tail);
+    //printf("Destroy LinkedListArray struct\n");
     free(lla);
 }
 
@@ -45,35 +48,29 @@ struct NodeArray* nodeArrayInit(void) {
     struct NodeArray *node = nodeArrayInitWithArray(NULL);
     if (node == NULL)
     {
-        printf("Couldn't malloc in nodeArrayInit()\n");
+        printf("ERR: Couldn't malloc in nodeArrayInit()\n");
     }
     return node;
 }
 
 // Create and return a node initialized with given array
-struct NodeArray* nodeArrayInitWithArray(int arr[4]) {
+struct NodeArray* nodeArrayInitWithArray(number arr[4]) {
+
+    //printf("malloc NodeArray struct: %d bytes\n", sizeof(struct NodeArray));
     struct NodeArray *node = malloc(sizeof(struct NodeArray)); 
 
     if (node == NULL)
     {
-        printf("couldn't malloc in nodeArrayInitWithArray()\n");
+        printf("ERR: couldn't malloc in nodeArrayInitWithArray()\n");
         return NULL;
     }
+    memset(node, 0, sizeof(struct NodeArray));
 
-    if (arr == NULL)
+    if (arr != NULL)
     {
-        int i;
-        for (i = 0; i < (sizeof(node->val) / sizeof(int)); i++)
-        {
-            node->val[i]=0;
-        }
-    }
-    else {
-        memcpy(node->val, arr, 4*sizeof(int));
+        memcpy(node->val, arr, 4*sizeof(number));
     }
 
-    node->next = NULL;
-    node->prev = NULL;
     return node;
 }
 
@@ -81,9 +78,10 @@ struct NodeArray* nodeArrayInitWithArray(int arr[4]) {
 void nodeArrayDestroy(struct NodeArray *node)
 {
     if (node == NULL) { return; }
+    //printf("destroy NodeArray struct\n");
     //free(node->val);
-    free(node->prev);
-    free(node->next);
+    //free(node->prev);
+    //free(node->next);
     free(node);
 }
 
@@ -95,7 +93,7 @@ void llaPush(struct LinkedListArray *lla, struct NodeArray *node) {
 
         node->next = NULL;
         node->prev = NULL;
-        lla->len = lla->len + 1;
+        ++(lla->len);
 
         if (lla->header == NULL)       // list is empty
         {
@@ -209,8 +207,14 @@ struct NodeArray* llaPopBack(struct LinkedListArray *lla) {
 
 // TODO: This function was never tested, although it seems to work in acp.c
 void llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext) {
-    if (lla == NULL) { return; }
-    else if (ext == NULL) { return; }
+    if (lla == NULL) { 
+        printf("lla is NULL in llaExtend()\n");
+        return;
+    }
+    else if (ext == NULL) {
+        printf("lla is NULL in llaExtend()\n");
+        return;
+    }
     else if (lla->len == 0)
     {
         lla->header = ext->header;
@@ -241,8 +245,8 @@ void llaPrint(struct LinkedListArray *lla) {
     }
 
     struct NodeArray *ptr;
-    //int i;
-    printf("\n Length=%d { ", lla->len);
+    //number i;
+    printf("\n Length=%lld { ", lla->len);
     for (ptr = lla->header; ptr != NULL; ptr = ptr->next) {
 
         nodeArrayPrint(ptr);
@@ -254,7 +258,7 @@ void llaPrint(struct LinkedListArray *lla) {
 // Print a node using printf
 void nodeArrayPrint(struct NodeArray *node) {
 
-    int i;
+    number i;
     if (node == NULL)
     {
         printf("NULLNODE");
@@ -272,11 +276,11 @@ void nodeArrayPrint(struct NodeArray *node) {
         {
             if (i + 1 == (sizeof(node->val) / sizeof(node->val[0])))
             {
-                printf("%d", node->val[i]);
+                printf("%lld", node->val[i]);
             }
             else
             {
-                printf("%d,", node->val[i]);
+                printf("%lld,", node->val[i]);
             }
         }
         printf("]");

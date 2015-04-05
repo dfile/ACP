@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "typedefs.h"
 #include "set_t.h"
 
 // Bare-bones initializer, just allocates memory and returns
@@ -11,40 +13,43 @@ set_t* setInit(void)
 }
 
 // This is the initializer that should be used when making sets
-set_t* setInitWithLenAndZero(unsigned int len, int zero)
+set_t* setInitWithLenAndZero(unumber len, number zero)
 {
     //byte *b = (byte *)calloc(len, sizeof(byte) * (len));
     // for some reason calloc can't allocate memory as large
     // as malloc can, so instead malloc the array and set
     // each index to be 0.
+    //printf("malloc set items: %lld bytes\n", sizeof(byte) * len);
     byte *b = (byte *)malloc(sizeof(byte) * (len));
-    int i;
+    //number i;
     if (b == NULL) 
     {
-        printf("Couldn't malloc in setInitWithLenAndZero()\n");
+        printf("ERR: Couldn't malloc in setInitWithLenAndZero()\n");
     }
     else
     {
-        for (i = 0; i < len; i++)
-        {
-            b[i] = 0;
-        }
+        memset(b, 0, len);
+        //for (i = 0; i < len; i++)
+        //{
+        //    b[i] = 0;
+        //}
     }
     set_t *s = setInitWithLenAndZeroAndItems(len, zero, b);
     return s;
 }
 
 // Use this initializer too
-set_t* setInitWithRange(int low, int high)
+set_t* setInitWithRange(number low, number high)
 {
-    unsigned int len = high - low + 1;
-    int zero = 0 - low;
+    unumber len = high - low + 1;
+    number zero = 0 - low;      // TODO: make this work for positive lows
     return setInitWithLenAndZero(len, zero);
 }
 
 // Designated initializer
-set_t* setInitWithLenAndZeroAndItems(unsigned int len, int zero, byte *items)
+set_t* setInitWithLenAndZeroAndItems(unumber len, number zero, byte *items)
 {
+    //printf("malloc set struct: %d bytes\n", sizeof(struct set_s));
     set_t *set = malloc(sizeof(struct set_s));
     setSetItems(set, items);
     setSetNumItems(set, 0);
@@ -58,31 +63,36 @@ void setDestroy(set_t *s)
 {
     if (s == NULL) { return; }
     free(s->items);
+    //printf("destroy set items\n");
     free(s);
+    //printf("destroy set struct\n");
+    s = NULL;
 }
 
-//(byte *)malloc(sizeof(byte) * (len + zero))
-
+//(byte *)malloc(sizeof(byte) * (len + zero)) 
 byte* setGetItems(set_t *s)
 {
     if (s != NULL) { return s->items; }
     else
     {
-        printf("set_t NULL in setGetItems()\n");
+        printf("ERR: set_t NULL in setGetItems()\n");
         return NULL;
     }
 }
 
 void setSetItems(set_t *s, byte *b)
 {
-    if (s != NULL) { s->items = b; }
+    if (s != NULL) { 
+        if (b == NULL) { printf("ERR: Trying to set NULL items to set in setSetItems()\n"); }
+        s->items = b;
+    }
     else
     {
-        printf("Trying to set items of NULL set in setSetItems()\n");
+        printf("ERR: Trying to set items of NULL set in setSetItems()\n");
     }
 }
 
-unsigned int setGetNumItems(set_t *s)
+unumber setGetNumItems(set_t *s)
 {
     if (s != NULL) { return s->num_items; }
     else
@@ -92,7 +102,7 @@ unsigned int setGetNumItems(set_t *s)
     }
 }
 
-void setSetNumItems(set_t *s, unsigned int n)
+void setSetNumItems(set_t *s, unumber n)
 {
     if (s != NULL) { s->num_items = n; }
     else
@@ -101,7 +111,7 @@ void setSetNumItems(set_t *s, unsigned int n)
     }
 }
 
-unsigned int setGetLen(set_t *s)
+unumber setGetLen(set_t *s)
 {
     if (s != NULL) { return s->len; }
     else
@@ -111,7 +121,7 @@ unsigned int setGetLen(set_t *s)
     }
 }
 
-void setSetLen(set_t *s, unsigned int len)
+void setSetLen(set_t *s, unumber len)
 {
     if (s != NULL) { s->len = len; }
     else
@@ -120,7 +130,7 @@ void setSetLen(set_t *s, unsigned int len)
     }
 }
 
-int setGetZero(set_t *s)
+number setGetZero(set_t *s)
 {
     if (s != NULL) { return s->zero; }
     else
@@ -130,7 +140,7 @@ int setGetZero(set_t *s)
     }
 }
 
-void setSetZero(set_t *s, int zero)
+void setSetZero(set_t *s, number zero)
 {
     if (s != NULL)
     {
@@ -143,30 +153,31 @@ void setSetZero(set_t *s, int zero)
     }
 }
 
-int setGetLowRange(set_t *s)
+number setGetLowRange(set_t *s)
 {
     return (0 - setGetZero(s));
 }
 
-int setGetHighRange(set_t *s)
+number setGetHighRange(set_t *s)
 {
     return (setGetLen(s) - 1 - setGetZero(s));
 }
 
+// XXX: pass in a buffer that it fills in rather than malloc
 char* setGetRange(set_t *s)
 {
     char *r = (char *)malloc(sizeof(char) * 30);
-    sprintf(r, "[%d to %d]", setGetLowRange(s), setGetHighRange(s));
+    sprintf(r, "[%lld to %lld]", setGetLowRange(s), setGetHighRange(s));
     return r;
 }
 
-byte setExists(set_t *s, int e)
+byte setExists(set_t *s, number e)
 {
     if (s != NULL)
     {
         if (setGetItems(s) != NULL)
         {
-            int index = e + setGetZero(s);
+            number index = e + setGetZero(s);
             if (index >= 0 && index < setGetLen(s))
             {
                 return (setGetItems(s)[index]);
@@ -174,33 +185,34 @@ byte setExists(set_t *s, int e)
             else
             {
                 char *range = setGetRange(s);
-                printf("%d is outside of bounds %s of byte array of set in setExists()\n", e, range);
+                printf("ERR: %lld is outside of bounds %s of byte array of set in setExists()\n", e, range);
                 free(range);
             }
         }
         else
         {
-            printf("Can't check %d in NULL byte array of set in setExists()\n", e);
+            printf("ERR: Can't check %lld in NULL byte array of set in setExists()\n", e);
         }
     }
     else
     {
-        printf("Can't check %d in NULL set in setExists()\n", e);
+        printf("ERR: Can't check %lld in NULL set in setExists()\n", e);
     }
     return (byte)(-1);
 
 }
 
-int setAdd(set_t *s, int a)
+number setAdd(set_t *s, number a)
 {
     if (s != NULL)
     {
         if (setGetItems(s) != NULL)
         {
-            int index = a + setGetZero(s);
+            number index = a + setGetZero(s);
             if (index >= 0 && index < setGetLen(s))
             {
                 // increment num_items only if index doesn't exist (is 0)
+                //printf("Adding %lld at %lld to set\n", a, index);
                 setSetNumItems(s, setExists(s, index - setGetZero(s)) ? setGetNumItems(s) : (setGetNumItems(s) + 1) );
                 setGetItems(s)[index] = (byte)1;
                 return 0;
@@ -208,32 +220,33 @@ int setAdd(set_t *s, int a)
             else
             {
                 char *range = setGetRange(s);
-                printf("%d is outside of bounds %s of byte array of set in setAdd()\n", a, range);
+                printf("ERR: %lld is outside of bounds %s of byte array of set in setAdd()\n", a, range);
                 free(range);
             }
         }
         else
         {
-            printf("Trying to add %d to NULL byte array of set in setAdd()\n", a);
+            printf("ERR: Trying to add %lld to NULL byte array of set in setAdd()\n", a);
         }
     }
     else
     {
-        printf("Trying to add %d to NULL set in setAdd()\n", a);
+        printf("ERR: Trying to add %lld to NULL set in setAdd()\n", a);
     }
     return -1;
 }
 
-int setRemove(set_t *s, int r)
+number setRemove(set_t *s, number r)
 {
     if (s != NULL)
     {
         if (setGetItems(s) != NULL)
         {
-            int index = r + setGetZero(s);
+            number index = r + setGetZero(s);
             if (index >= 0 && index < setGetLen(s))
             {
                 // decrement num_items only if index exists (is 1)
+                printf("Removing %lld at %lld from set\n", r, index);
                 setSetNumItems(s, (setExists(s, index - setGetZero(s)) ? setGetNumItems(s) - 1 : setGetNumItems(s)) );
                 setGetItems(s)[index] = (byte)0;
                 return 0;
@@ -241,18 +254,18 @@ int setRemove(set_t *s, int r)
             else
             {
                 char *range = setGetRange(s);
-                printf("%d is outside of bounds %s of byte array of set in setRemove()\n", r, setGetRange(s));
+                printf("ERR: %lld is outside of bounds %s of byte array of set in setRemove()\n", r, setGetRange(s));
                 free(range);
             }
         }
         else
         {
-            printf("Can't remove %d from NULL byte array of set in setRemove()\n", r);
+            printf("ERR: Can't remove %lld from NULL byte array of set in setRemove()\n", r);
         }
     }
     else
     {
-        printf("Can't remove %d from NULL set in setRemove()\n", r);
+        printf("ERR: Can't remove %lld from NULL set in setRemove()\n", r);
     }
     return -1;
 }
@@ -261,18 +274,18 @@ int setRemove(set_t *s, int r)
 void setPrintDefault(set_t *s)
 {
     printf("Set items: [");
-    int i = 0;
+    number i = 0;
     for (i = 0; i < setGetLen(s); i++)
     {
         if (setExists(s, i - setGetZero(s)))
         {
             if (i + 1 == setGetLen(s))
             {
-                printf("%d", i - setGetZero(s));
+                printf("%lld", i - setGetZero(s));
             }
             else
             {
-                printf("%d,", i - setGetZero(s));
+                printf("%lld,", i - setGetZero(s));
             }
         }
     }
@@ -282,10 +295,10 @@ void setPrintDefault(set_t *s)
 void setPrintByteArray(set_t *s)
 {
     printf("Set items: [\n");
-    int i = 0;
+    number i = 0;
     for (i = 0; i < setGetLen(s); i++)
     {
-        printf("%d: %d\n", i - setGetZero(s), (int)(setExists(s, i - setGetZero(s))));
+        printf("%lld: %lld\n", i - setGetZero(s), (number)(setExists(s, i - setGetZero(s))));
     }
     printf("]\n");
 }
@@ -301,9 +314,9 @@ void setPrint(set_t *s, byte opt)
     if (s == NULL) { printf("Set is NULL\n"); }
     else
     {
-        printf("Set num_items: %u\n", setGetNumItems(s));
-        printf("Set zero: %d\n", setGetZero(s));
-        printf("Set len: %u\n", setGetLen(s));
+        printf("Set num_items: %llu\n", setGetNumItems(s));
+        printf("Set zero: %lld\n", setGetZero(s));
+        printf("Set len: %llu\n", setGetLen(s));
         char *range = setGetRange(s);
         printf("Set range: %s\n", range);
         free(range);
@@ -326,11 +339,12 @@ void setClear(set_t *s)
         if (setGetItems(s) != NULL)
         {
             setSetNumItems(s, 0);
-            int i = 0;
-            for (i = 0; i < setGetLen(s); i++)
-            {
-                setGetItems(s)[i] = (byte)0;
-            }
+            //number i = 0;
+            memset(setGetItems(s), 0, s->len);
+            //for (i = 0; i < setGetLen(s); i++)
+            //{
+            //    setGetItems(s)[i] = (byte)0;
+            //}
         }
     }
 }

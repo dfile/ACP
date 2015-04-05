@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "LinkedList.h"
+#include "typedefs.h"
 
 // Create and return an empty linked list
 struct LinkedList* llInit(void) {
@@ -8,12 +10,12 @@ struct LinkedList* llInit(void) {
 
     if (list == NULL)
     {
-        printf("couldn't malloc in llInit()\n");
+        printf("ERR: couldn't malloc in llInit()\n");
         return NULL;
     }
 
-    list->header = NULL;
-    list->tail = NULL;
+    memset(list, 0, sizeof(struct LinkedList));
+
     return list;
 }
 
@@ -24,7 +26,7 @@ void llDestroy(struct LinkedList *ll)
     else if (ll->len != 0)
     {
         // delete each node in list
-        int i = 0;
+        number i = 0;
         struct Node *temp;
         for (i = 0; i < ll->len; i++)
         {
@@ -32,36 +34,36 @@ void llDestroy(struct LinkedList *ll)
             nodeDestroy(temp);
         }
     }
-    free(ll->header);
-    free(ll->tail);
+    //free(ll->header);
+    //free(ll->tail);
+    //printf("destroy LinkedList struct\n");
     free(ll);
 }
 
 // Create and return an empty node
 struct Node* nodeInit(void) {
     struct Node *node = nodeInitWithInt(0);
-    
     if (node == NULL)
     {
-        printf("Couldn't malloc in nodeInit()\n");
+        printf("ERR: Couldn't malloc in nodeInit()\n");
     }
-
     return node;
 }
 
 // Create and return a node initialized with an int
-struct Node* nodeInitWithInt(int i) {
+struct Node* nodeInitWithInt(number i) {
+    
+    //printf("malloc Node struct: %d bytes\n", sizeof(struct Node));
     struct Node *node = malloc(sizeof(struct Node));
 
     if (node == NULL)
     {
-        printf("couldn't malloc in nodeInitWithInt()\n");
+        printf("ERR: couldn't malloc in nodeInitWithInt()\n");
         return NULL;
     }
+    memset(node, 0, sizeof(struct Node));
 
     node->val = i;
-    node->next = NULL;
-    node->prev = NULL;
     return node;
 }
 
@@ -69,8 +71,9 @@ struct Node* nodeInitWithInt(int i) {
 void nodeDestroy(struct Node *node)
 {
     if (node == NULL) { return; }
-    free(node->prev);
-    free(node->next);
+    //printf("destroy Node struct\n");
+    //free(node->prev);
+    //free(node->next);
     free(node);
 }
 
@@ -195,8 +198,14 @@ struct Node* llPopBack(struct LinkedList *ll) {
 
 // XXX: This function was never tested!
 void llExtend(struct LinkedList *ll, struct LinkedList *ext) {
-    if (ll == NULL) { return; }
-    else if (ext == NULL) { return; }
+    if (ll == NULL) { 
+        printf("ll is NULL in llExtend()\n");
+        return;
+    }
+    else if (ext == NULL) {
+        printf("ll is NULL in llExtend()\n");
+        return;
+    }
     else if (ll->len == 0)
     {
         ll->header = ext->header;
@@ -227,9 +236,9 @@ void llPrint(struct LinkedList *ll) {
     }
     
     struct Node *ptr;
-    printf("\n Length=%d [ ", ll->len);
+    printf("\n Length=%lld [ ", ll->len);
     for (ptr = ll->header; ptr != NULL; ptr = ptr->next) {
-        printf("(%d ", ptr->val);
+        printf("(%lld ", ptr->val);
         if (ptr->prev == NULL) { printf("N"); }
         else { printf("S"); }
         if (ptr->next == NULL) { printf("N) "); }

@@ -1,26 +1,28 @@
 #ifndef LINKEDLIST_H_
 #define LINKEDLIST_H_
 
+#include "typedefs.h"
+
 /**
  *  A node that holds an int and points to two other
  *  nodes.  To be used in a linked list.
  */
-struct Node {
-    int val;
+typedef struct Node {
+    number val;
     struct Node *next;
     struct Node *prev;
-};
+} node;
 
 /**
  *  A doubly linked list implementation. Has header
  *  and tail nodes pointing to the front and back
  *  of the list, respectively.
  */
-struct LinkedList {
+typedef struct LinkedList {
     struct Node *header;
     struct Node *tail;
-    int len;
-};
+    number len;
+} ll;
 
 // Create and return an empty linked list.
 struct LinkedList* llInit(void);
@@ -32,7 +34,7 @@ void llDestroy(struct LinkedList *ll);
 struct Node* nodeInit(void);
 
 // Create and return an empty node with value i
-struct Node* nodeInitWithInt(int i);
+struct Node* nodeInitWithInt(number i);
 
 // Destroy a node
 void nodeDestroy(struct Node *node);

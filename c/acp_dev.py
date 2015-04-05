@@ -126,10 +126,12 @@ def seek(root, cap):
     missing =  list(nope)
     missing.sort()
     print missing
+    print "Length: " + str(len(missing))
     return missing
 
-seek([-1,2,2,3], 1000)
-print CURVELIST
+seek([-1,2,2,3], 1000000)
+# print CURVELIST
+# print " Length: " + str(len(CURVELIST))
 
 """
 import cProfile, pstats

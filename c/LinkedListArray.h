@@ -1,26 +1,28 @@
 #ifndef LINKEDLISTARRAY_H_
 #define LINKEDLISTARRAY_H_
 
+#include "typedefs.h"
+
 /**
  *  A node that holds an array of four ints and points
  *  to two other nodes. To be used in a linked list.
  */
-struct NodeArray {
-    int val[4];
+typedef struct NodeArray {
+    number val[4];
     struct NodeArray *next;
     struct NodeArray *prev;
-};
+} nodeA;
 
 /**
  *  A doubly linked list implementation. Has header
  *  and tail nodes pointing to the front and back
  *  of the list, respectively.
  */
-struct LinkedListArray {
+typedef struct LinkedListArray {
     struct NodeArray *header;
     struct NodeArray *tail;
-    int len;
-};
+    number len;
+} lla;
 
 // Create and return an empty linked list.
 struct LinkedListArray* llaInit(void);
@@ -32,7 +34,7 @@ void llaDestroy(struct LinkedListArray *lla);
 struct NodeArray* nodeArrayInit(void);
 
 // Create and return a node with an array of 4 numbers.
-struct NodeArray* nodeArrayInitWithArray(int arr[4]);
+struct NodeArray* nodeArrayInitWithArray(number arr[4]);
 
 // Destroy a nodeArray and the array it contains
 void nodeArrayDestroy(struct NodeArray *node);

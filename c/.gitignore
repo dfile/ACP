@@ -1,0 +1,2 @@
+# ignore all compiled binaries with extension .bin
+*.bin
