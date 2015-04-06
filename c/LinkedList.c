@@ -10,7 +10,7 @@ struct LinkedList* llInit(void) {
 
     if (list == NULL)
     {
-        printf("ERR: couldn't malloc in llInit()\n");
+        fprintf(stderr, "ERR: couldn't malloc in llInit()\n");
         return NULL;
     }
 
@@ -45,7 +45,7 @@ struct Node* nodeInit(void) {
     struct Node *node = nodeInitWithInt(0);
     if (node == NULL)
     {
-        printf("ERR: Couldn't malloc in nodeInit()\n");
+        fprintf(stderr, "ERR: Couldn't malloc in nodeInit()\n");
     }
     return node;
 }
@@ -58,7 +58,7 @@ struct Node* nodeInitWithInt(number i) {
 
     if (node == NULL)
     {
-        printf("ERR: couldn't malloc in nodeInitWithInt()\n");
+        fprintf(stderr, "ERR: couldn't malloc in nodeInitWithInt()\n");
         return NULL;
     }
     memset(node, 0, sizeof(struct Node));

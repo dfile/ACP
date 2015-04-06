@@ -1,7 +1,7 @@
-Running seek with root {-1,2,2,3,} and ceiling 50000000
+Running seek with root {-1,2,2,3,} and ceiling 100000000
 In seek
 Running fuchsian
-CURVELIST num_items: 16666607
+CURVELIST num_items: 33333274
 Running genealogy
 Running valuesOf
 Running path

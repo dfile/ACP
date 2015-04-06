@@ -21,6 +21,7 @@ number ceiling;
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 //struct LinkedListArray* transform(number quad[4], number limit) {
+//XXX: not used
 void transform(number quad[4], number limit, struct LinkedListArray *solutions) {
     //struct LinkedListArray *solutions = llaInit();
     //struct LinkedListArray solutions;
@@ -29,11 +30,14 @@ void transform(number quad[4], number limit, struct LinkedListArray *solutions) 
     //solutions.tail = NULL;
     //solutions.len = 0;
 
-    number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
-    number twice = (a + b + c + d) << 1; // very quick way to multiply by 2
+    //number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
+    //number twice = (a + b + c + d) << 1; // very quick way to multiply by 2
 
     //number transformed[4] = {0,0,0,0};
-    number transformed[4] = {-3 * a + twice, -3 * b + twice, -3 * c + twice, -3 * d + twice};
+    number transformed[4] = {-3 * quad[0] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
+                             -3 * quad[1] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
+                             -3 * quad[2] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
+                             -3 * quad[3] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1)};
     //transformed[0] = -3 * a + twice;
     //transformed[1] = -3 * b + twice;
     //transformed[2] = -3 * c + twice;
@@ -43,8 +47,8 @@ void transform(number quad[4], number limit, struct LinkedListArray *solutions) 
     for (i = 0; i < 4; i++)
     {
         if (    (quad[i] < transformed[i]) 
-             && (quad[i] < limit)
-             && (transformed[i] < limit))
+                && (quad[i] < limit)
+                && (transformed[i] < limit))
         {
             number prime[4];
             memcpy(prime, quad, 4*sizeof(number));
@@ -78,18 +82,41 @@ void fuchsian(number root[4], number limit) {
         //number a[4];
         //memcpy(a, n->val, 4*sizeof(number));
         //struct LinkedListArray *l = transform(n->val, limit);
-        struct LinkedListArray l;
-        l.header = NULL;
-        l.tail = NULL;
-        l.len = 0;
+        //struct LinkedListArray l;
+        //l.header = NULL;
+        //l.tail = NULL;
+        //l.len = 0;
         //memset(&l, 0, sizeof(lla));
-        transform(n->val, limit, &l);
+
+        number transformed[4] = {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+                                 -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+                                 -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+                                 -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
+        
+        unsigned char i;
+        for (i = 0; i < 4; i++)
+        {
+            if ( (n->val[i] < transformed[i]) 
+                 && (n->val[i] < limit)
+                 && (transformed[i] < limit))
+            {
+                number prime[4];
+                memcpy(prime, n->val, 4*sizeof(number));
+                prime[i] = transformed[i];
+                llaPush(&ancestors, nodeArrayInitWithArray(prime));
+                setAdd(CURVELIST, transformed[i]);
+            }
+        }
+
+
+        //transform(n->val, limit, &l);
         //llaPrint(&l);
         //llaExtend( &ancestors, &l );
-       
+
         //printf(NUMFORM"\n", l->header);
         //printf(NUMFORM"\n", l->tail);
         //printf(NUMFORM"\n", l->len);
+        /*
         while (1)
         {
             //printf("Looped\n");
@@ -100,6 +127,7 @@ void fuchsian(number root[4], number limit) {
             llaAppend(&ancestors, ptr);
             //nodeArrayDestroy(ptr);
         }
+        */
         //printf("Broke loop\n");
         //llaPrint(l);
         //printf(NUMFORM"\n", l->header);
@@ -107,6 +135,7 @@ void fuchsian(number root[4], number limit) {
         //printf(NUMFORM"\n", l->len);
         //free(l);
         //llaDestroy(l);
+        
         nodeArrayDestroy(n);
     }
     //llaDestroy(ancestors);
@@ -136,7 +165,7 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
     struct LinkedListArray *solutions = llaInit();
     number family[4][4];
     number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
- 
+
     number aPos = (-a + (2 * (b + c + d))) % 24;
     number bPos = (-b + (2 * (a + c + d))) % 24;
     number cPos = (-c + (2 * (a + b + d))) % 24;
@@ -174,7 +203,7 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
             }
 
         }
-        
+
         // If family[i] was not in orbit, append it to orbit
         if (matched == 0)
         {
@@ -214,7 +243,7 @@ struct LinkedListArray* genealogy(number seed[4]) {
 
     llaAppend(ancestors, nodeArrayInitWithArray(modSeed));
     llaAppend(orbit, nodeArrayInitWithArray(modSeed));
-    
+
     struct NodeArray *parent = NULL;
     for (parent = ancestors->header; parent != NULL; parent = parent->next)
     {
@@ -240,32 +269,32 @@ set_t* path(set_t *valList, number top) {
     number i = 0;
     for (i = 0; i < top; i++)
     {
-            // Alert user if result of mod is negative (it shouldn't be)
-            if ((i % 24) < 0) { printf("mod in path was negative"); }
+        // Alert user if result of mod is negative (it shouldn't be)
+        if ((i % 24) < 0) { printf("mod in path was negative"); }
+        if (i == 834) {
+            //printf("i is 834 in path()\n");
+            if (setExists(valList, (i % 24))) {
+                //printf("834 %% 24 is in valList (good!)\n");
+            }
+            else {
+                //printf("834 %% 24 is not in valList (bad)\n");
+                //printf("834 %% 24 = %d\n", 834 % 24);
+                //setPrint(valList, 0);
+            }
+        }
+        if (setExists(valList, (i % 24)))
+        {
+            setAdd(could, i);
             if (i == 834) {
-                //printf("i is 834 in path()\n");
-                if (setExists(valList, (i % 24))) {
-                    //printf("834 %% 24 is in valList (good!)\n");
+                //printf("Was 834 added to valList? ");
+                if (setExists(could, i)) {
+                    //printf("Yes (good!)\n");
                 }
                 else {
-                    //printf("834 %% 24 is not in valList (bad)\n");
-                    //printf("834 %% 24 = %d\n", 834 % 24);
-                    //setPrint(valList, 0);
+                    //printf("No (bad)\n");
                 }
             }
-            if (setExists(valList, (i % 24)))
-            {
-                setAdd(could, i);
-                if (i == 834) {
-                    //printf("Was 834 added to valList? ");
-                    if (setExists(could, i)) {
-                        //printf("Yes (good!)\n");
-                    }
-                    else {
-                        //printf("No (bad)\n");
-                    }
-                }
-            }
+        }
     }
 
     return could;
@@ -320,7 +349,7 @@ ll* seek(number root[4], number cap)
     {
         setAdd(CURVELIST, root[i]);
     } 
-    
+
     printf("In seek\n");
 
     printf("Running fuchsian\n");
@@ -386,7 +415,7 @@ int main(int argc, char *argv[]) {
     //setPrint(results, 0);
     llPrint(results);
     fflush(stdout);
-    
+
     //setDestroy(results);
     llDestroy(results);
     return 0;
