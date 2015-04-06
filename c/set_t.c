@@ -42,7 +42,15 @@ set_t* setInitWithLenAndZero(unumber len, number zero)
 set_t* setInitWithRange(number low, number high)
 {
     unumber len = high - low + 1;
-    number zero = 0 - low;      // TODO: make this work for positive lows
+    number zero;
+    if (low <= 0)
+    {
+        zero = 0 - low;
+    }
+    else if (low > 0)
+    {
+        zero = 0 + low;
+    }
     return setInitWithLenAndZero(len, zero);
 }
 
@@ -67,6 +75,66 @@ void setDestroy(set_t *s)
     free(s);
     //printf("destroy set struct\n");
     s = NULL;
+}
+
+unumber setOffsetToZero(set_t *s, number n)
+{
+    if (setGetZero(s) <= 0)
+    {
+        return n - setGetZero(s);
+    }
+    else
+    {
+        return n + setGetZero(s);
+    }
+}
+
+number setOffsetToNormal(set_t *s, unumber u)
+{
+    if (setGetZero(s) <= 0)
+    {
+        return u + setGetZero(s);
+    }
+    else
+    {
+        return u - setGetZero(s);
+    }
+}
+
+byte setIsInRange(set_t *s, number n)
+{
+    n = setOffsetToZero(s, n);
+    return (n >= 0 && n < setGetLen(s));
+}
+
+byte setSetItem(set_t *s, number n, byte b)
+{
+    if (s != NULL)
+    {
+        if (s->items != NULL)
+        {
+            if (setIsInRange(s, n))
+            {
+                unumber index = setOffsetToZero(s, n);
+                s->items[index] = b;
+            }
+            else
+            {
+                printf("ERR: "NUMFORM" is out of range of set in setSetItem()\n", n);
+            }
+        }
+        else
+        {
+            printf("ERR: items of set is NULL in setSetItem()\n");
+            return -1;
+        }
+    }
+    else
+    {
+        printf("ERR: set is NULL in setSetItem()\n");
+        return -1;
+    }
+    return 0;
 }
 
 //(byte *)malloc(sizeof(byte) * (len + zero)) 
@@ -177,10 +245,11 @@ byte setExists(set_t *s, number e)
     {
         if (setGetItems(s) != NULL)
         {
-            number index = e + setGetZero(s);
-            if (index >= 0 && index < setGetLen(s))
+            if (setIsInRange(s, e))
             {
-                return (setGetItems(s)[index]);
+                
+                number index = setOffsetToZero(s, e);
+                return setGetItems(s)[index];
             }
             else
             {
@@ -208,13 +277,14 @@ number setAdd(set_t *s, number a)
     {
         if (setGetItems(s) != NULL)
         {
-            number index = a + setGetZero(s);
-            if (index >= 0 && index < setGetLen(s))
+            //number index = setOffsetToZero(s, a);
+            if (setIsInRange(s, a))
             {
                 // increment num_items only if index doesn't exist (is 0)
                 //printf("Adding "NUMFORM" at "NUMFORM" to set\n", a, index);
-                setSetNumItems(s, setExists(s, index - setGetZero(s)) ? setGetNumItems(s) : (setGetNumItems(s) + 1) );
-                setGetItems(s)[index] = (byte)1;
+                setSetNumItems(s, (setExists(s, a) ? setGetNumItems(s) : (setGetNumItems(s) + 1)) );
+                //XXX
+                setSetItem(s, a, (byte)1);
                 return 0;
             }
             else
@@ -242,13 +312,13 @@ number setRemove(set_t *s, number r)
     {
         if (setGetItems(s) != NULL)
         {
-            number index = r + setGetZero(s);
-            if (index >= 0 && index < setGetLen(s))
+            //number index = setOffsetToZero(s, r);
+            if (setIsInRange(s, r))
             {
                 // decrement num_items only if index exists (is 1)
-                printf("Removing "NUMFORM" at "NUMFORM" from set\n", r, index);
-                setSetNumItems(s, (setExists(s, index - setGetZero(s)) ? setGetNumItems(s) - 1 : setGetNumItems(s)) );
-                setGetItems(s)[index] = (byte)0;
+                printf("Removing "NUMFORM" at "NUMFORM" from set\n", r, setOffsetToZero(s, r));
+                setSetNumItems(s, (setExists(s, r) ? setGetNumItems(s) - 1 : setGetNumItems(s)) );
+                setSetItem(s, r, (byte)0);
                 return 0;
             }
             else
@@ -274,10 +344,10 @@ number setRemove(set_t *s, number r)
 void setPrintDefault(set_t *s)
 {
     printf("Set items: [");
-    number i = 0;
+    unumber i = 0;
     for (i = 0; i < setGetLen(s); i++)
     {
-        if (setExists(s, i - setGetZero(s)))
+        if (setExists(s, setOffsetToNormal(s, i)))
         {
             if (i + 1 == setGetLen(s))
             {
@@ -295,10 +365,10 @@ void setPrintDefault(set_t *s)
 void setPrintByteArray(set_t *s)
 {
     printf("Set items: [\n");
-    number i = 0;
+    unumber i = 0;
     for (i = 0; i < setGetLen(s); i++)
     {
-        printf(NUMFORM": "NUMFORM"\n", i - setGetZero(s), (number)(setExists(s, i - setGetZero(s))));
+        printf(NUMFORM": "NUMFORM"\n", setOffsetToNormal(s, i), (number)(setExists(s, setOffsetToNormal(s, i))));
     }
     printf("]\n");
 }
