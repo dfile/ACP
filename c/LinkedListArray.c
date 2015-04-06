@@ -246,7 +246,7 @@ void llaPrint(struct LinkedListArray *lla) {
 
     struct NodeArray *ptr;
     //number i;
-    printf("\n Length=%lld { ", lla->len);
+    printf("\n Length="NUMFORM" { ", lla->len);
     for (ptr = lla->header; ptr != NULL; ptr = ptr->next) {
 
         nodeArrayPrint(ptr);
@@ -276,11 +276,11 @@ void nodeArrayPrint(struct NodeArray *node) {
         {
             if (i + 1 == (sizeof(node->val) / sizeof(node->val[0])))
             {
-                printf("%lld", node->val[i]);
+                printf(""NUMFORM"", node->val[i]);
             }
             else
             {
-                printf("%lld,", node->val[i]);
+                printf(""NUMFORM",", node->val[i]);
             }
         }
         printf("]");

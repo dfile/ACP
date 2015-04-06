@@ -32,11 +32,12 @@ void transform(number quad[4], number limit, struct LinkedListArray *solutions) 
     number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
     number twice = (a + b + c + d) << 1; // very quick way to multiply by 2
 
-    number transformed[4] = {0,0,0,0};
-    transformed[0] = -3 * a + twice;
-    transformed[1] = -3 * b + twice;
-    transformed[2] = -3 * c + twice;
-    transformed[3] = -3 * d + twice;
+    //number transformed[4] = {0,0,0,0};
+    number transformed[4] = {-3 * a + twice, -3 * b + twice, -3 * c + twice, -3 * d + twice};
+    //transformed[0] = -3 * a + twice;
+    //transformed[1] = -3 * b + twice;
+    //transformed[2] = -3 * c + twice;
+    //transformed[3] = -3 * d + twice;
 
     unsigned char i = 0;
     for (i = 0; i < 4; i++)
@@ -86,9 +87,9 @@ void fuchsian(number root[4], number limit) {
         //llaPrint(&l);
         //llaExtend( &ancestors, &l );
        
-        //printf("%lld\n", l->header);
-        //printf("%lld\n", l->tail);
-        //printf("%lld\n", l->len);
+        //printf(NUMFORM"\n", l->header);
+        //printf(NUMFORM"\n", l->tail);
+        //printf(NUMFORM"\n", l->len);
         while (1)
         {
             //printf("Looped\n");
@@ -101,9 +102,9 @@ void fuchsian(number root[4], number limit) {
         }
         //printf("Broke loop\n");
         //llaPrint(l);
-        //printf("%lld\n", l->header);
-        //printf("%lld\n", l->tail);
-        //printf("%lld\n", l->len);
+        //printf(NUMFORM"\n", l->header);
+        //printf(NUMFORM"\n", l->tail);
+        //printf(NUMFORM"\n", l->len);
         //free(l);
         //llaDestroy(l);
         nodeArrayDestroy(n);
@@ -124,6 +125,8 @@ set_t* valuesOf(struct LinkedListArray* quadList) {
             setAdd(possible, ruple->val[i]);
         }
     }
+
+    //setPrint(possible, 0);
 
     return possible;
 }
@@ -152,28 +155,43 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
     memcpy(family[3], ((number [4]){a % 24, b % 24, c % 24, dPos}),   4*sizeof(number));
 
     unsigned char i;
-    number match = 1;
     for (i = 0; i < 4; i++)
     {
         struct NodeArray *ptr = NULL;
+        unsigned int matched = 0;
+        int match = 1;
         for (ptr = orbit->header; ptr != NULL; ptr = ptr->next)
         {
             // If memcmp finds family[i] in orbit, match will be 0, so
             // multiplying by 0 will always give 0, and match will end
             // up as 0.
 
-            match = match * memcmp(family[i], ptr->val, 4*sizeof(number));
+            match = memcmp(family[i], ptr->val, 4*sizeof(number));
+            if (match == 0)
+            {
+                matched = 1;
+                break;
+            }
 
         }
         
         // If family[i] was not in orbit, append it to orbit
-        if (match != 0)
+        if (matched == 0)
         {
             llaAppend(orbit, nodeArrayInitWithArray(family[i]));
             llaAppend(solutions, nodeArrayInitWithArray(family[i]));
         }
-        
-        match = 1;
+        else
+        {
+            int j;
+            //printf("[ ");
+            for (j = 0; j < 4; j++)
+            {
+                //printf("%d, ", family[i][j]);
+            }
+            //printf("] was in orbit: ");
+            //llaPrint(orbit);
+        }
     }
 
     return solutions;
@@ -200,11 +218,16 @@ struct LinkedListArray* genealogy(number seed[4]) {
     struct NodeArray *parent = NULL;
     for (parent = ancestors->header; parent != NULL; parent = parent->next)
     {
+        //printf("Running transformOrbit\n");
         struct LinkedListArray *newGeneration = transformOrbit(parent->val, orbit);
+        //printf("newGeneration: ");
+        //llaPrint(newGeneration);
         llaExtend(ancestors, newGeneration);
         free(newGeneration);
     }
     llaDestroy(ancestors);
+    //printf("orbit at end of genealogy: ");
+    //llaPrint(orbit);
 
     return orbit;
 
@@ -219,9 +242,29 @@ set_t* path(set_t *valList, number top) {
     {
             // Alert user if result of mod is negative (it shouldn't be)
             if ((i % 24) < 0) { printf("mod in path was negative"); }
+            if (i == 834) {
+                //printf("i is 834 in path()\n");
+                if (setExists(valList, (i % 24))) {
+                    //printf("834 %% 24 is in valList (good!)\n");
+                }
+                else {
+                    //printf("834 %% 24 is not in valList (bad)\n");
+                    //printf("834 %% 24 = %d\n", 834 % 24);
+                    //setPrint(valList, 0);
+                }
+            }
             if (setExists(valList, (i % 24)))
             {
                 setAdd(could, i);
+                if (i == 834) {
+                    //printf("Was 834 added to valList? ");
+                    if (setExists(could, i)) {
+                        //printf("Yes (good!)\n");
+                    }
+                    else {
+                        //printf("No (bad)\n");
+                    }
+                }
             }
     }
 
@@ -237,8 +280,26 @@ ll* compare(set_t *valuesGlobal) {
     number i = 0;
     for (i = LOW; i <= ceiling; i++)
     {
+        if (i == 834) {
+            //printf("Comparing "NUMFORM" in compare() (good!)\n", i);
+            if (setExists(valuesGlobal, i)) {
+                //printf("834 is in valuesGlobal (good!)\n");
+            }
+            else {
+                //printf("834 is not in valuesGlobal (bad)\n");
+            }
+            if (!setExists(CURVELIST, i)) {
+                //printf("834 is not in CURVELIST (good!)\n");
+            }
+            else {
+                //printf("834 is in CURVELIST (bad)\n");
+            }
+            //setPrint(valuesGlobal, 0);
+            //setPrint(CURVELIST, 0);
+        }
         if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
+            //if (i == 834) { printf("Adding "NUMFORM" to missing in compare() (good!)\n", i); }
             node *n = (node *)nodeInitWithInt(i);
             //setAdd(missing, i);
             llAppend(missing, n);
@@ -263,26 +324,32 @@ ll* seek(number root[4], number cap)
     printf("In seek\n");
 
     printf("Running fuchsian\n");
+    fflush(stdout);
     fuchsian(root, cap);
-    printf("CURVELIST num_items: %lld\n", setGetNumItems(CURVELIST));
+    printf("CURVELIST num_items: "NUMFORM"\n", setGetNumItems(CURVELIST));
+    fflush(stdout);
     //setPrint(CURVELIST, 0);
 
     printf("Running genealogy\n");
+    fflush(stdout);
     struct LinkedListArray *admissible = genealogy(root);
     //llaPrint(admissible);
 
     printf("Running valuesOf\n");
+    fflush(stdout);
     set_t *valuesOrbit = valuesOf(admissible);
     //setPrint(valuesOrbit, 0);
 
     llaDestroy(admissible);
 
     printf("Running path\n");
+    fflush(stdout);
     set_t *valuesGlobal = path(valuesOrbit, cap);
 
     setDestroy(valuesOrbit);
 
     printf("Running compare\n");
+    fflush(stdout);
     //set_t *nope = compare(valuesGlobal);
     ll *nope = compare(valuesGlobal);
 
@@ -310,13 +377,15 @@ int main(int argc, char *argv[]) {
     CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
-    for (index = 0; index < 4; index++) { printf("%lld,",(long long)root[index]); }
-    printf("} and ceiling %lld\n", (long long)ceiling);
+    for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
+    printf("} and ceiling "NUMFORM"\n", ceiling);
+    fflush(stdout);
 
     //set_t *results = seek(root, ceiling);
     ll *results = seek(root, ceiling);
     //setPrint(results, 0);
     llPrint(results);
+    fflush(stdout);
     
     //setDestroy(results);
     llDestroy(results);

@@ -53,7 +53,7 @@ struct Node* nodeInit(void) {
 // Create and return a node initialized with an int
 struct Node* nodeInitWithInt(number i) {
     
-    //printf("malloc Node struct: %d bytes\n", sizeof(struct Node));
+    //printf("malloc Node struct: "NUMFORM" bytes\n", sizeof(struct Node));
     struct Node *node = malloc(sizeof(struct Node));
 
     if (node == NULL)
@@ -236,9 +236,9 @@ void llPrint(struct LinkedList *ll) {
     }
     
     struct Node *ptr;
-    printf("\n Length=%lld [ ", ll->len);
+    printf("\n Length="NUMFORM" [ ", ll->len);
     for (ptr = ll->header; ptr != NULL; ptr = ptr->next) {
-        printf("(%lld ", ptr->val);
+        printf("("NUMFORM" ", ptr->val);
         if (ptr->prev == NULL) { printf("N"); }
         else { printf("S"); }
         if (ptr->next == NULL) { printf("N) "); }

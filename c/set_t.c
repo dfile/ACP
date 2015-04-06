@@ -19,7 +19,7 @@ set_t* setInitWithLenAndZero(unumber len, number zero)
     // for some reason calloc can't allocate memory as large
     // as malloc can, so instead malloc the array and set
     // each index to be 0.
-    //printf("malloc set items: %lld bytes\n", sizeof(byte) * len);
+    //printf("malloc set items: "NUMFORM" bytes\n", sizeof(byte) * len);
     byte *b = (byte *)malloc(sizeof(byte) * (len));
     //number i;
     if (b == NULL) 
@@ -167,7 +167,7 @@ number setGetHighRange(set_t *s)
 char* setGetRange(set_t *s)
 {
     char *r = (char *)malloc(sizeof(char) * 30);
-    sprintf(r, "[%lld to %lld]", setGetLowRange(s), setGetHighRange(s));
+    sprintf(r, "["NUMFORM" to "NUMFORM"]", setGetLowRange(s), setGetHighRange(s));
     return r;
 }
 
@@ -185,18 +185,18 @@ byte setExists(set_t *s, number e)
             else
             {
                 char *range = setGetRange(s);
-                printf("ERR: %lld is outside of bounds %s of byte array of set in setExists()\n", e, range);
+                printf("ERR: "NUMFORM" is outside of bounds %s of byte array of set in setExists()\n", e, range);
                 free(range);
             }
         }
         else
         {
-            printf("ERR: Can't check %lld in NULL byte array of set in setExists()\n", e);
+            printf("ERR: Can't check "NUMFORM" in NULL byte array of set in setExists()\n", e);
         }
     }
     else
     {
-        printf("ERR: Can't check %lld in NULL set in setExists()\n", e);
+        printf("ERR: Can't check "NUMFORM" in NULL set in setExists()\n", e);
     }
     return (byte)(-1);
 
@@ -212,7 +212,7 @@ number setAdd(set_t *s, number a)
             if (index >= 0 && index < setGetLen(s))
             {
                 // increment num_items only if index doesn't exist (is 0)
-                //printf("Adding %lld at %lld to set\n", a, index);
+                //printf("Adding "NUMFORM" at "NUMFORM" to set\n", a, index);
                 setSetNumItems(s, setExists(s, index - setGetZero(s)) ? setGetNumItems(s) : (setGetNumItems(s) + 1) );
                 setGetItems(s)[index] = (byte)1;
                 return 0;
@@ -220,18 +220,18 @@ number setAdd(set_t *s, number a)
             else
             {
                 char *range = setGetRange(s);
-                printf("ERR: %lld is outside of bounds %s of byte array of set in setAdd()\n", a, range);
+                printf("ERR: "NUMFORM" is outside of bounds %s of byte array of set in setAdd()\n", a, range);
                 free(range);
             }
         }
         else
         {
-            printf("ERR: Trying to add %lld to NULL byte array of set in setAdd()\n", a);
+            printf("ERR: Trying to add "NUMFORM" to NULL byte array of set in setAdd()\n", a);
         }
     }
     else
     {
-        printf("ERR: Trying to add %lld to NULL set in setAdd()\n", a);
+        printf("ERR: Trying to add "NUMFORM" to NULL set in setAdd()\n", a);
     }
     return -1;
 }
@@ -246,7 +246,7 @@ number setRemove(set_t *s, number r)
             if (index >= 0 && index < setGetLen(s))
             {
                 // decrement num_items only if index exists (is 1)
-                printf("Removing %lld at %lld from set\n", r, index);
+                printf("Removing "NUMFORM" at "NUMFORM" from set\n", r, index);
                 setSetNumItems(s, (setExists(s, index - setGetZero(s)) ? setGetNumItems(s) - 1 : setGetNumItems(s)) );
                 setGetItems(s)[index] = (byte)0;
                 return 0;
@@ -254,18 +254,18 @@ number setRemove(set_t *s, number r)
             else
             {
                 char *range = setGetRange(s);
-                printf("ERR: %lld is outside of bounds %s of byte array of set in setRemove()\n", r, setGetRange(s));
+                printf("ERR: "NUMFORM" is outside of bounds %s of byte array of set in setRemove()\n", r, setGetRange(s));
                 free(range);
             }
         }
         else
         {
-            printf("ERR: Can't remove %lld from NULL byte array of set in setRemove()\n", r);
+            printf("ERR: Can't remove "NUMFORM" from NULL byte array of set in setRemove()\n", r);
         }
     }
     else
     {
-        printf("ERR: Can't remove %lld from NULL set in setRemove()\n", r);
+        printf("ERR: Can't remove "NUMFORM" from NULL set in setRemove()\n", r);
     }
     return -1;
 }
@@ -281,11 +281,11 @@ void setPrintDefault(set_t *s)
         {
             if (i + 1 == setGetLen(s))
             {
-                printf("%lld", i - setGetZero(s));
+                printf(""NUMFORM"", i - setGetZero(s));
             }
             else
             {
-                printf("%lld,", i - setGetZero(s));
+                printf(""NUMFORM",", i - setGetZero(s));
             }
         }
     }
@@ -298,7 +298,7 @@ void setPrintByteArray(set_t *s)
     number i = 0;
     for (i = 0; i < setGetLen(s); i++)
     {
-        printf("%lld: %lld\n", i - setGetZero(s), (number)(setExists(s, i - setGetZero(s))));
+        printf(NUMFORM": "NUMFORM"\n", i - setGetZero(s), (number)(setExists(s, i - setGetZero(s))));
     }
     printf("]\n");
 }
@@ -314,9 +314,9 @@ void setPrint(set_t *s, byte opt)
     if (s == NULL) { printf("Set is NULL\n"); }
     else
     {
-        printf("Set num_items: %llu\n", setGetNumItems(s));
-        printf("Set zero: %lld\n", setGetZero(s));
-        printf("Set len: %llu\n", setGetLen(s));
+        printf("Set num_items: "UNUMFORM"\n", setGetNumItems(s));
+        printf("Set zero: "NUMFORM"\n", setGetZero(s));
+        printf("Set len: "UNUMFORM"\n", setGetLen(s));
         char *range = setGetRange(s);
         printf("Set range: %s\n", range);
         free(range);

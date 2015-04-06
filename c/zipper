@@ -1,0 +1,4 @@
+#!/bin/bash
+# Zips essential acp files for convenient transfer
+
+zip -r acp.zip acp.c LinkedList.c LinkedList.h LinkedListArray.c LinkedListArray.h set_t.c set_t.h typedefs.h b run br prof zipper

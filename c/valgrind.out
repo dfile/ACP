@@ -1,4 +1,4 @@
-[mm247666@mathcs c]$ valgrind --tool=memcheck --leak-check=full acp
+[mm247666@mathcs c]$ valgrind --tool=memcheck --leak-check=full acp.bin
 ==10116== Memcheck, a memory error detector
 ==10116== Copyright (C) 2002-2010, and GNU GPL'd, by Julian Seward et al.
 ==10116== Using Valgrind-3.6.0 and LibVEX; rerun with -h for copyright info

@@ -47,6 +47,7 @@ def valuesOf(quadList):
     for ruple in quadList:
         for value in ruple:
             possible.add(value)
+    #print possible
     return possible
 
 # input: quad (a quadruple), orbit (list of admissible quadruples)
@@ -87,6 +88,7 @@ def genealogy(seed):
         # print("orbit: ", orbit)
         # print("newGeneration: ", newGeneration)
         ancestors.extend(newGeneration)
+    # print orbit
     return orbit
 
 # input: valList (admissible values of the packing), top (arbitrary limit)
@@ -99,6 +101,9 @@ def path(valList, top):
         for poss in valList:
             # print "Comparing " + str(i) + " (" + str(i % 24) + ")" + " and " + str(poss)
             if (i % 24) == poss:
+                # if i == 834:
+                    # print str(i) + " % 24 = " + str(i % 24)
+                    # print valList
                 # print "added"
                 could.add(i)
                 break
@@ -129,7 +134,7 @@ def seek(root, cap):
     print "Length: " + str(len(missing))
     return missing
 
-seek([-1,2,2,3], 1000000)
+seek([-1,2,2,3], 10000000)
 # print CURVELIST
 # print " Length: " + str(len(CURVELIST))
 
