@@ -2,3 +2,7 @@
 # run acp
 
 ./acp.bin $1
+if [ "$2" == "mail" ]
+    then
+        echo "acp finished $1" | mail -s "acp finished $1" -a $3 msm697@gmail.com
+fi

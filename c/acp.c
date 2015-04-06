@@ -88,7 +88,7 @@ void fuchsian(number root[4], number limit) {
         //l.len = 0;
         //memset(&l, 0, sizeof(lla));
 
-        number transformed[4] = {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+        long long int transformed[4] = {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
                                  -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
                                  -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
                                  -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
@@ -97,7 +97,6 @@ void fuchsian(number root[4], number limit) {
         for (i = 0; i < 4; i++)
         {
             if ( (n->val[i] < transformed[i]) 
-                 && (n->val[i] < limit)
                  && (transformed[i] < limit))
             {
                 number prime[4];
