@@ -25,6 +25,7 @@ set_t* setInitWithLenAndZero(unumber len, number zero)
     if (b == NULL) 
     {
         fprintf(stderr, "ERR: Couldn't malloc in setInitWithLenAndZero()\n");
+        exit(1);
     }
     else
     {
@@ -121,17 +122,20 @@ byte setSetItem(set_t *s, number n, byte b)
             else
             {
                 fprintf(stderr, "ERR: "NUMFORM" is out of range of set in setSetItem()\n", n);
+                exit(1);
             }
         }
         else
         {
             fprintf(stderr, "ERR: items of set is NULL in setSetItem()\n");
+            exit(1);
             return -1;
         }
     }
     else
     {
         fprintf(stderr, "ERR: set is NULL in setSetItem()\n");
+        exit(1);
         return -1;
     }
     return 0;
@@ -144,6 +148,7 @@ byte* setGetItems(set_t *s)
     else
     {
         fprintf(stderr, "ERR: set_t NULL in setGetItems()\n");
+        exit(1);
         return NULL;
     }
 }
@@ -151,12 +156,16 @@ byte* setGetItems(set_t *s)
 void setSetItems(set_t *s, byte *b)
 {
     if (s != NULL) { 
-        if (b == NULL) { fprintf(stderr, "ERR: Trying to set NULL items to set in setSetItems()\n"); }
+        if (b == NULL) { 
+            fprintf(stderr, "ERR: Trying to set NULL items to set in setSetItems()\n");
+            exit(-1); 
+        }
         s->items = b;
     }
     else
     {
         fprintf(stderr, "ERR: Trying to set items of NULL set in setSetItems()\n");
+        exit(1);
     }
 }
 
@@ -165,7 +174,7 @@ unumber setGetNumItems(set_t *s)
     if (s != NULL) { return s->num_items; }
     else
     {
-        fprintf(stderr, "set_t NULL in setGetNumItems()");
+        fprintf(stdout, "set_t NULL in setGetNumItems()");
         return 0;
     }
 }
@@ -176,6 +185,7 @@ void setSetNumItems(set_t *s, unumber n)
     else
     {
         fprintf(stderr, "Trying to set num_items of NULL set in setSetNumItems()\n");
+        exit(1);
     }
 }
 
@@ -184,7 +194,7 @@ unumber setGetLen(set_t *s)
     if (s != NULL) { return s->len; }
     else
     {
-        fprintf(stderr, "set_t NULL in setGetLen()\n");
+        fprintf(stdout, "set_t NULL in setGetLen()\n");
         return 0;
     }
 }
@@ -195,6 +205,7 @@ void setSetLen(set_t *s, unumber len)
     else
     {
         fprintf(stderr, "Trying to set len of NULL set in setSetLen()\n");
+        exit(1);
     }
 }
 
@@ -203,7 +214,7 @@ number setGetZero(set_t *s)
     if (s != NULL) { return s->zero; }
     else
     {
-        fprintf(stderr, "set_t NULL in setGetZero()\n");
+        fprintf(stdout, "set_t NULL in setGetZero()\n");
         return 0;
     }
 }
@@ -217,6 +228,7 @@ void setSetZero(set_t *s, number zero)
     else
     {
         fprintf(stderr, "Trying to set zero of NULL set in setSetZero()\n");
+        exit(1);
         return;
     }
 }
@@ -256,16 +268,19 @@ byte setExists(set_t *s, number e)
                 char *range = setGetRange(s);
                 fprintf(stderr, "ERR: "NUMFORM" is outside of bounds %s of byte array of set in setExists()\n", e, range);
                 free(range);
+                exit(1);
             }
         }
         else
         {
             fprintf(stderr, "ERR: Can't check "NUMFORM" in NULL byte array of set in setExists()\n", e);
+            exit(1);
         }
     }
     else
     {
         fprintf(stderr, "ERR: Can't check "NUMFORM" in NULL set in setExists()\n", e);
+        exit(1);
     }
     return (byte)(-1);
 
@@ -292,16 +307,19 @@ number setAdd(set_t *s, number a)
                 char *range = setGetRange(s);
                 fprintf(stderr, "ERR: "NUMFORM" is outside of bounds %s of byte array of set in setAdd()\n", a, range);
                 free(range);
+                exit(1);
             }
         }
         else
         {
             fprintf(stderr, "ERR: Trying to add "NUMFORM" to NULL byte array of set in setAdd()\n", a);
+            exit(1);
         }
     }
     else
     {
         fprintf(stderr, "ERR: Trying to add "NUMFORM" to NULL set in setAdd()\n", a);
+        exit(1);
     }
     return -1;
 }
@@ -326,16 +344,19 @@ number setRemove(set_t *s, number r)
                 char *range = setGetRange(s);
                 fprintf(stderr, "ERR: "NUMFORM" is outside of bounds %s of byte array of set in setRemove()\n", r, setGetRange(s));
                 free(range);
+                exit(1);
             }
         }
         else
         {
             fprintf(stderr, "ERR: Can't remove "NUMFORM" from NULL byte array of set in setRemove()\n", r);
+            exit(1);
         }
     }
     else
     {
         fprintf(stderr, "ERR: Can't remove "NUMFORM" from NULL set in setRemove()\n", r);
+        exit(1);
     }
     return -1;
 }

@@ -13,6 +13,7 @@ struct LinkedListArray* llaInit(void) {
     if (list == NULL)
     {
         fprintf(stderr, "ERR: couldn't malloc in llaInit()\n");
+        exit(1);
         return NULL;
     }
 
@@ -49,6 +50,7 @@ struct NodeArray* nodeArrayInit(void) {
     if (node == NULL)
     {
         fprintf(stderr, "ERR: Couldn't malloc in nodeArrayInit()\n");
+        exit(1);
     }
     return node;
 }
@@ -62,6 +64,7 @@ struct NodeArray* nodeArrayInitWithArray(number arr[4]) {
     if (node == NULL)
     {
         fprintf(stderr, "ERR: couldn't malloc in nodeArrayInitWithArray()\n");
+        exit(1);
         return NULL;
     }
     memset(node, 0, sizeof(struct NodeArray));

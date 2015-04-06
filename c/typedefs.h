@@ -1,9 +1,9 @@
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
 
-#define NUMFORM "%d"
-#define UNUMFORM "%u"
+#define NUMFORM "%lld"
+#define UNUMFORM "%llu"
 
-typedef int number;
-typedef unsigned int unumber;
+typedef long long int number;
+typedef unsigned long long int unumber;
 #endif
