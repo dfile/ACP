@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "typedefs.h"
 #include "LinkedListArray.h"
 #include "LinkedList.h"
@@ -17,11 +18,22 @@ set_t *CURVELIST;
 
 number ceiling;
 
+time_t t;
+char *timestamp;
+
+void printTime()
+{
+    time(&t);
+    timestamp = ctime(&t);
+    printf("Time: %s\n", timestamp);
+}
+
 // input: quad (a quadruple of curvatures)
 // output: solutions (list of transformed quadruples)
 // function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
 //struct LinkedListArray* transform(number quad[4], number limit) {
 //XXX: not used
+/*
 void transform(number quad[4], number limit, struct LinkedListArray *solutions) {
     //struct LinkedListArray *solutions = llaInit();
     //struct LinkedListArray solutions;
@@ -61,7 +73,7 @@ void transform(number quad[4], number limit, struct LinkedListArray *solutions) 
     //return solutions;
     return;
 }
-
+*/
 /**
  * input:  root (the initial quadruple that defines the packing)
  *         limit (arbitrary limit we don't want to go above)
@@ -358,11 +370,13 @@ ll* seek(number root[4], number cap)
     fflush(stdout);
     //setPrint(CURVELIST, 0);
 
+    printTime();
     printf("Running genealogy\n");
     fflush(stdout);
     struct LinkedListArray *admissible = genealogy(root);
     //llaPrint(admissible);
 
+    printTime();
     printf("Running valuesOf\n");
     fflush(stdout);
     set_t *valuesOrbit = valuesOf(admissible);
@@ -370,12 +384,14 @@ ll* seek(number root[4], number cap)
 
     llaDestroy(admissible);
 
+    printTime();
     printf("Running path\n");
     fflush(stdout);
     set_t *valuesGlobal = path(valuesOrbit, cap);
 
     setDestroy(valuesOrbit);
 
+    printTime();
     printf("Running compare\n");
     fflush(stdout);
     //set_t *nope = compare(valuesGlobal);
@@ -391,7 +407,23 @@ ll* seek(number root[4], number cap)
 
 int main(int argc, char *argv[]) {
 
-    number root[4] = {-1, 2, 2, 3};
+    if (argc != 6)
+    {
+        fprintf(stderr, "ERR: Incorrect number of arguments.\n");
+        fprintf(stderr, "Usage: acp curv1 curv2 curv3 curv4 ceiling\n");
+        fprintf(stderr, "Example: acp -1 2 2 3 1000\n");
+        return 0;
+    }
+
+    number root[4] = {0,0,0,0};
+
+    unsigned char arg = 1;
+    for (arg = 1; arg < 5; arg++)
+    {
+        root[arg-1] = (number)strtol(argv[arg], NULL, 10);
+    }
+
+    //number root[4] = {-1, 2, 2, 3};
 
     number index = 0;
     LOW = root[0];
@@ -401,18 +433,25 @@ int main(int argc, char *argv[]) {
     }
 
     ceiling = 1000;
-    if (argc > 1) { ceiling = atoi(argv[1]); }
+    //if (argc > 1) { ceiling = atoi(argv[1]); }
+    ceiling = (number)strtol(argv[5], NULL, 10);
     CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
     printf("} and ceiling "NUMFORM"\n", ceiling);
+
+    printTime();
+
     fflush(stdout);
 
     //set_t *results = seek(root, ceiling);
     ll *results = seek(root, ceiling);
     //setPrint(results, 0);
     llPrint(results);
+
+    printTime();
+
     fflush(stdout);
 
     //setDestroy(results);

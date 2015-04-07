@@ -1,0 +1,6 @@
+nohup: ignoring input
+Running seek with root {-3,5,5,8,} and ceiling 100000000
+Time: Tue Apr  7 10:48:20 2015
+
+In seek
+Running fuchsian

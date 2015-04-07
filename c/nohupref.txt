@@ -1,0 +1,1 @@
+nohup run 1000 mail acp1.txt &>acp1.txt

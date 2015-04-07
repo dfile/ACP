@@ -1,8 +1,8 @@
 #!/bin/bash
 # run acp
 
-./acp.bin $1
-if [ "$2" == "mail" ]
+./acp.bin $1 $2 $3 $4 $5
+if [ "$6" == "mail" ]
     then
-        echo "acp finished $1" | mail -s "acp finished $1" -a $3 msm697@gmail.com
+        echo "acp finished $1 $2 $3 $4" | mail -s "acp finished $1 $2 $3 $4" -a $7 msm697@gmail.com
 fi

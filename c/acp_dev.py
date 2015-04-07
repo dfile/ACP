@@ -134,7 +134,8 @@ def seek(root, cap):
     print "Length: " + str(len(missing))
     return missing
 
-seek([-1,2,2,3], 10000000)
+# seek([-1,2,2,3], 10000000)
+seek([-3,5,8,8], 10000000)
 # print CURVELIST
 # print " Length: " + str(len(CURVELIST))
 

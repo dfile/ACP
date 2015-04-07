@@ -2,4 +2,8 @@ nohup: ignoring input
 Running seek with root {-1,2,2,3,} and ceiling 1000000000
 In seek
 Running fuchsian
-./run: line 4:  1454 Terminated              ./acp.bin $1
+CURVELIST num_items: 333333274
+Running genealogy
+Running valuesOf
+Running path
+ERR: Couldn't malloc in setInitWithLenAndZero()
