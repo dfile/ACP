@@ -127,7 +127,7 @@ def seek(root, cap):
     valuesGlobal = path(valuesOrbit, cap)
     # print valuesGlobal
     nope = valuesGlobal.difference( CURVELIST )
-    print nope
+    # print nope
     missing =  list(nope)
     missing.sort()
     print missing

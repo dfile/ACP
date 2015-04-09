@@ -30,7 +30,9 @@ void printTime()
 
 // input: quad (a quadruple of curvatures)
 // output: solutions (list of transformed quadruples)
-// function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
+// function: this runs quadruples through the four transformations (one for each curvature),
+//           and records the new one only if the transformed curvature is bigger than the 
+//           original (so a smaller circle in the packing)
 //struct LinkedListArray* transform(number quad[4], number limit) {
 //XXX: not used
 /*
@@ -100,10 +102,11 @@ void fuchsian(number root[4], number limit) {
         //l.len = 0;
         //memset(&l, 0, sizeof(lla));
 
-        long long int transformed[4] = {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-                                 -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-                                 -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-                                 -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
+        long long int transformed[4] = 
+            {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+             -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+             -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
+             -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
         
         unsigned char i;
         for (i = 0; i < 4; i++)
@@ -171,7 +174,8 @@ set_t* valuesOf(struct LinkedListArray* quadList) {
     return possible;
 }
 
-// Only returns solutions, not an updated orbit because orbit is actually modified in this function since it's a pointer
+// Only returns solutions, not an updated orbit because orbit is actually 
+// modified in this function since it's a pointer
 struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* orbit) {
     struct LinkedListArray *solutions = llaInit();
     number family[4][4];
@@ -202,11 +206,9 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
         int match = 1;
         for (ptr = orbit->header; ptr != NULL; ptr = ptr->next)
         {
-            // If memcmp finds family[i] in orbit, match will be 0, so
-            // multiplying by 0 will always give 0, and match will end
-            // up as 0.
-
+            // If memcmp finds family[i] in orbit, match will be 0
             match = memcmp(family[i], ptr->val, 4*sizeof(number));
+            
             if (match == 0)
             {
                 matched = 1;
@@ -223,6 +225,7 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
         }
         else
         {
+            /*
             int j;
             //printf("[ ");
             for (j = 0; j < 4; j++)
@@ -231,6 +234,7 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
             }
             //printf("] was in orbit: ");
             //llaPrint(orbit);
+            */
         }
     }
 
@@ -432,7 +436,7 @@ int main(int argc, char *argv[]) {
         if (root[index] < LOW) { LOW = root[index]; }
     }
 
-    ceiling = 1000;
+    //ceiling = 1000;
     //if (argc > 1) { ceiling = atoi(argv[1]); }
     ceiling = (number)strtol(argv[5], NULL, 10);
     CURVELIST = setInitWithRange(LOW, ceiling);
