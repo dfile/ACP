@@ -43,7 +43,7 @@ set_t* setInitWithLenAndZero(unumber len, number zero)
 set_t* setInitWithRange(number low, number high)
 {
     unumber len = high - low + 1;
-    number zero;
+    number zero = 0;
     if (low <= 0)
     {
         zero = 0 - low;
