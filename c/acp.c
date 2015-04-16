@@ -60,6 +60,7 @@ void fuchsian(number root[4], number limit) {
             printf("%lldth iteration: %lld %lld %lld %lld\n", 
                     count, transformed[0], transformed[1], 
                     transformed[2], transformed[3]);
+            fflush(stdout);
         }
         
         for (i = 0; i < 4; i++)
