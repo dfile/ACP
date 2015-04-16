@@ -1,2 +1,6 @@
-# ignore all compiled binaries with extension .bin
 *.bin
+gmon.out
+.gitignore
+scratch.sh
+*.o
+*.swp
