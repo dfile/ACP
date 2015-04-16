@@ -10,8 +10,6 @@
 #include "LinkedList.h"
 #include "set_t.h"
 
-//typedef int number;
-
 number LOW;  // the smallest curvature in root quad, used to determine set_t range
 
 set_t *CURVELIST;
@@ -28,97 +26,59 @@ void printTime()
     printf("Time: %s\n", timestamp);
 }
 
-// input: quad (a quadruple of curvatures)
-// output: solutions (list of transformed quadruples)
-// function: this runs quadruples through the four transformations (one for each curvature),
-//           and records the new one only if the transformed curvature is bigger than the 
-//           original (so a smaller circle in the packing)
-//struct LinkedListArray* transform(number quad[4], number limit) {
-//XXX: not used
-/*
-void transform(number quad[4], number limit, struct LinkedListArray *solutions) {
-    //struct LinkedListArray *solutions = llaInit();
-    //struct LinkedListArray solutions;
-    //memset(solutions, 0, sizeof(lla));
-    //solutions.header = NULL;
-    //solutions.tail = NULL;
-    //solutions.len = 0;
-
-    //number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
-    //number twice = (a + b + c + d) << 1; // very quick way to multiply by 2
-
-    //number transformed[4] = {0,0,0,0};
-    number transformed[4] = {-3 * quad[0] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
-                             -3 * quad[1] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
-                             -3 * quad[2] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1),
-                             -3 * quad[3] + ((quad[0] + quad[1] + quad[2] + quad[3]) << 1)};
-    //transformed[0] = -3 * a + twice;
-    //transformed[1] = -3 * b + twice;
-    //transformed[2] = -3 * c + twice;
-    //transformed[3] = -3 * d + twice;
-
-    unsigned char i = 0;
-    for (i = 0; i < 4; i++)
-    {
-        if (    (quad[i] < transformed[i]) 
-                && (quad[i] < limit)
-                && (transformed[i] < limit))
-        {
-            number prime[4];
-            memcpy(prime, quad, 4*sizeof(number));
-            prime[i] = transformed[i];
-            llaAppend(solutions, nodeArrayInitWithArray(prime));
-            setAdd(CURVELIST, transformed[i]);
-        }
-    }
-
-    //return solutions;
-    return;
-}
-*/
 /**
  * input:  root (the initial quadruple that defines the packing)
  *         limit (arbitrary limit we don't want to go above)
  * output: ancestors (list of quadruples all below the limit)
  */
 void fuchsian(number root[4], number limit) {
-    //struct LinkedListArray *ancestors = llaInit();
     struct LinkedListArray ancestors;
     ancestors.header = NULL;
     ancestors.tail = NULL;
     ancestors.len = 0;
 
     llaAppend(&ancestors, nodeArrayInitWithArray(root));
+    struct NodeArray *n = NULL;
+    unsigned long long int count = 0;
+    unsigned char i;
+    number prime[4];
+    long long int transformed[4];
 
     while (ancestors.len > 0)
     {
-        struct NodeArray *n = llaPop(&ancestors);
-        //number a[4];
-        //memcpy(a, n->val, 4*sizeof(number));
-        //struct LinkedListArray *l = transform(n->val, limit);
-        //struct LinkedListArray l;
-        //l.header = NULL;
-        //l.tail = NULL;
-        //l.len = 0;
-        //memset(&l, 0, sizeof(lla));
+        ++count;
+        n = llaPop(&ancestors);
 
-        long long int transformed[4] = 
+        transformed[0] = -3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[1] = -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[2] = -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[3] = -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+
+        /*
+        transformed[4] = 
             {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
              -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
              -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
              -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
+        */
         
-        unsigned char i;
         for (i = 0; i < 4; i++)
         {
             if ( (n->val[i] < transformed[i]) 
                  && (transformed[i] < limit))
             {
+                if (count % 1000000 == 0)
+                {
+                    printf("%lldth iteration: %lld %lld %lld %lld\n", 
+                           count, transformed[0], transformed[1], 
+                           transformed[2], transformed[3]);
+                }
+                /*
                 if (transformed[i] == 0)
                 {
                     //printf("0 in transformed: %lld %lld %lld %lld\n", transformed[0], transformed[1], transformed[2], transformed[3]);
                 }
-                number prime[4];
+                */
                 memcpy(prime, n->val, 4*sizeof(number));
                 prime[i] = transformed[i];
                 llaPush(&ancestors, nodeArrayInitWithArray(prime));
@@ -126,38 +86,9 @@ void fuchsian(number root[4], number limit) {
             }
         }
 
-
-        //transform(n->val, limit, &l);
-        //llaPrint(&l);
-        //llaExtend( &ancestors, &l );
-
-        //printf(NUMFORM"\n", l->header);
-        //printf(NUMFORM"\n", l->tail);
-        //printf(NUMFORM"\n", l->len);
-        /*
-        while (1)
-        {
-            //printf("Looped\n");
-            struct NodeArray *ptr = NULL;
-            ptr = llaPop(&l);
-            //nodeArrayPrint(ptr);
-            if (ptr == NULL) { break; }
-            llaAppend(&ancestors, ptr);
-            //nodeArrayDestroy(ptr);
-        }
-        */
-        //printf("Broke loop\n");
-        //llaPrint(l);
-        //printf(NUMFORM"\n", l->header);
-        //printf(NUMFORM"\n", l->tail);
-        //printf(NUMFORM"\n", l->len);
-        //free(l);
-        //llaDestroy(l);
-        
         nodeArrayDestroy(n);
         n = NULL;
     }
-    //llaDestroy(ancestors);
 
     return;
 }
