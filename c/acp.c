@@ -61,26 +61,12 @@ void fuchsian(number root[4], number limit) {
                     count, transformed[0], transformed[1], 
                     transformed[2], transformed[3]);
         }
-
-        /*
-        transformed[4] = 
-            {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-             -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-             -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
-             -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1)};
-        */
         
         for (i = 0; i < 4; i++)
         {
             if ( (n->val[i] < transformed[i]) 
                  && (transformed[i] < limit))
             {
-                /*
-                if (transformed[i] == 0)
-                {
-                    //printf("0 in transformed: %lld %lld %lld %lld\n", transformed[0], transformed[1], transformed[2], transformed[3]);
-                }
-                */
                 memcpy(prime, n->val, 4*sizeof(number));
                 prime[i] = transformed[i];
                 llaPush(&ancestors, nodeArrayInitWithArray(prime));
@@ -106,8 +92,6 @@ set_t* valuesOf(struct LinkedListArray* quadList) {
             setAdd(possible, ruple->val[i]);
         }
     }
-
-    //setPrint(possible, 0);
 
     return possible;
 }
@@ -161,19 +145,6 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
             llaAppend(orbit, nodeArrayInitWithArray(family[i]));
             llaAppend(solutions, nodeArrayInitWithArray(family[i]));
         }
-        else
-        {
-            /*
-            int j;
-            //printf("[ ");
-            for (j = 0; j < 4; j++)
-            {
-                //printf("%d, ", family[i][j]);
-            }
-            //printf("] was in orbit: ");
-            //llaPrint(orbit);
-            */
-        }
     }
 
     return solutions;
@@ -200,16 +171,11 @@ struct LinkedListArray* genealogy(number seed[4]) {
     struct NodeArray *parent = NULL;
     for (parent = ancestors->header; parent != NULL; parent = parent->next)
     {
-        //printf("Running transformOrbit\n");
         struct LinkedListArray *newGeneration = transformOrbit(parent->val, orbit);
-        //printf("newGeneration: ");
-        //llaPrint(newGeneration);
         llaExtend(ancestors, newGeneration);
         free(newGeneration);
     }
     llaDestroy(ancestors);
-    //printf("orbit at end of genealogy: ");
-    //llaPrint(orbit);
 
     return orbit;
 
@@ -224,29 +190,9 @@ set_t* path(set_t *valList, number top) {
     {
         // Alert user if result of mod is negative (it shouldn't be)
         if ((i % 24) < 0) { printf("mod in path was negative"); }
-        if (i == 834) {
-            //printf("i is 834 in path()\n");
-            if (setExists(valList, (i % 24))) {
-                //printf("834 %% 24 is in valList (good!)\n");
-            }
-            else {
-                //printf("834 %% 24 is not in valList (bad)\n");
-                //printf("834 %% 24 = %d\n", 834 % 24);
-                //setPrint(valList, 0);
-            }
-        }
         if (setExists(valList, (i % 24)))
         {
             setAdd(could, i);
-            if (i == 834) {
-                //printf("Was 834 added to valList? ");
-                if (setExists(could, i)) {
-                    //printf("Yes (good!)\n");
-                }
-                else {
-                    //printf("No (bad)\n");
-                }
-            }
         }
     }
 
@@ -254,36 +200,15 @@ set_t* path(set_t *valList, number top) {
 
 }
 
-//set_t* compare(set_t *valuesGlobal) {
 ll* compare(set_t *valuesGlobal) {
 
-    //set_t *missing = setInitWithRange(LOW, ceiling);
     ll *missing = (ll *)llaInit();
     number i = 0;
     for (i = LOW; i <= ceiling; i++)
     {
-        if (i == 834) {
-            //printf("Comparing "NUMFORM" in compare() (good!)\n", i);
-            if (setExists(valuesGlobal, i)) {
-                //printf("834 is in valuesGlobal (good!)\n");
-            }
-            else {
-                //printf("834 is not in valuesGlobal (bad)\n");
-            }
-            if (!setExists(CURVELIST, i)) {
-                //printf("834 is not in CURVELIST (good!)\n");
-            }
-            else {
-                //printf("834 is in CURVELIST (bad)\n");
-            }
-            //setPrint(valuesGlobal, 0);
-            //setPrint(CURVELIST, 0);
-        }
         if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
-            //if (i == 834) { printf("Adding "NUMFORM" to missing in compare() (good!)\n", i); }
             node *n = (node *)nodeInitWithInt(i);
-            //setAdd(missing, i);
             llAppend(missing, n);
         }
     }
@@ -293,7 +218,6 @@ ll* compare(set_t *valuesGlobal) {
 }
 
 // TODO: use ceiling instead of cap
-//set_t* seek(number root[4], number cap)
 ll* seek(number root[4], number cap)
 {
 
@@ -310,19 +234,16 @@ ll* seek(number root[4], number cap)
     fuchsian(root, cap);
     printf("CURVELIST num_items: "NUMFORM"\n", setGetNumItems(CURVELIST));
     fflush(stdout);
-    //setPrint(CURVELIST, 0);
 
     printTime();
     printf("Running genealogy\n");
     fflush(stdout);
     struct LinkedListArray *admissible = genealogy(root);
-    //llaPrint(admissible);
 
     printTime();
     printf("Running valuesOf\n");
     fflush(stdout);
     set_t *valuesOrbit = valuesOf(admissible);
-    //setPrint(valuesOrbit, 0);
 
     llaDestroy(admissible);
 
@@ -336,15 +257,12 @@ ll* seek(number root[4], number cap)
     printTime();
     printf("Running compare\n");
     fflush(stdout);
-    //set_t *nope = compare(valuesGlobal);
     ll *nope = compare(valuesGlobal);
 
     setDestroy(valuesGlobal);
     setDestroy(CURVELIST);
 
     return nope;
-
-    //return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -365,8 +283,6 @@ int main(int argc, char *argv[]) {
         root[arg-1] = (number)strtol(argv[arg], NULL, 10);
     }
 
-    //number root[4] = {-1, 2, 2, 3};
-
     number index = 0;
     LOW = root[0];
     for (index = 0; index < 4; index++)
@@ -374,8 +290,6 @@ int main(int argc, char *argv[]) {
         if (root[index] < LOW) { LOW = root[index]; }
     }
 
-    //ceiling = 1000;
-    //if (argc > 1) { ceiling = atoi(argv[1]); }
     ceiling = (number)strtol(argv[5], NULL, 10);
     CURVELIST = setInitWithRange(LOW, ceiling);
 
@@ -387,16 +301,13 @@ int main(int argc, char *argv[]) {
 
     fflush(stdout);
 
-    //set_t *results = seek(root, ceiling);
     ll *results = seek(root, ceiling);
-    //setPrint(results, 0);
     llPrint(results, 0);
 
     printTime();
 
     fflush(stdout);
 
-    //setDestroy(results);
     llDestroy(results);
     return 0;
 }  
