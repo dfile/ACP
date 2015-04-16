@@ -230,7 +230,7 @@ void llExtend(struct LinkedList *ll, struct LinkedList *ext) {
 }
 
 // Print a linked list using printf
-void llPrint(struct LinkedList *ll) {
+void llPrint(struct LinkedList *ll, int printOpt) {
     
     if (ll == NULL)
     {
@@ -239,13 +239,31 @@ void llPrint(struct LinkedList *ll) {
     }
     
     struct Node *ptr;
-    printf("\n Length="NUMFORM" [ ", ll->len);
-    for (ptr = ll->header; ptr != NULL; ptr = ptr->next) {
+    printf("\n Length="NUMFORM" [", ll->len);
+    if (printOpt == 0)
+    {
+      for (ptr = ll->header; ptr != NULL; ptr = ptr->next) 
+      {
+        if (ptr->next == NULL) // Last node in list
+        {
+          printf(""NUMFORM"", ptr->val);
+        }
+        else
+        {
+          printf(""NUMFORM", ", ptr->val);
+        }
+      }
+    }
+    else
+    {
+      for (ptr = ll->header; ptr != NULL; ptr = ptr->next) 
+      {
         printf("("NUMFORM" ", ptr->val);
         if (ptr->prev == NULL) { printf("N"); }
         else { printf("S"); }
         if (ptr->next == NULL) { printf("N) "); }
         else { printf("S) "); }
+      }
     }
-    printf("NULL ]\n");
+    printf("]\n");
 }

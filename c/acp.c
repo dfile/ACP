@@ -114,6 +114,10 @@ void fuchsian(number root[4], number limit) {
             if ( (n->val[i] < transformed[i]) 
                  && (transformed[i] < limit))
             {
+                if (transformed[i] == 0)
+                {
+                    //printf("0 in transformed: %lld %lld %lld %lld\n", transformed[0], transformed[1], transformed[2], transformed[3]);
+                }
                 number prime[4];
                 memcpy(prime, n->val, 4*sizeof(number));
                 prime[i] = transformed[i];
@@ -151,6 +155,7 @@ void fuchsian(number root[4], number limit) {
         //llaDestroy(l);
         
         nodeArrayDestroy(n);
+        n = NULL;
     }
     //llaDestroy(ancestors);
 
@@ -452,7 +457,7 @@ int main(int argc, char *argv[]) {
     //set_t *results = seek(root, ceiling);
     ll *results = seek(root, ceiling);
     //setPrint(results, 0);
-    llPrint(results);
+    llPrint(results, 0);
 
     printTime();
 

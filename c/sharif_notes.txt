@@ -1,0 +1,14 @@
+>>>Sharif's notes about acp<<<
+
+acp.c works for (-1, 2, 2, 3) up to 1 billion (meaning it matches the python code)
+
+acp.c seems to work for (-3, 5, 8, 8) up to 100 million (it finds all the ones found by the python code up to 10 million plus many more)
+
+acp.c seems to work for (-3, 5, 8, 8) up to 1 billion (it finds all the ones
+found by the python code up to 10 million and all the ones previously found by
+acp.c up to 100 million plus many more).
+
+It doesn't look like we've found X_p for (-3,5,8,8) yet even after going up to
+1 billion.
+
+Looking back at acp.-3588.100000000.txt, it seems that acp.c failed to run correctly with that packing up to 100 million (4/7/15), but worked when I ran it again today (4/16/15). Weird.

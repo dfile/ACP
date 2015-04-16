@@ -55,6 +55,6 @@ struct Node* llPopBack(struct LinkedList *ll);
 void llExtend(struct LinkedList *ll, struct LinkedList *ext);
 
 // Print a linked list from front to back.
-void llPrint(struct LinkedList *ll);
+void llPrint(struct LinkedList *ll, int printOpt);
 
 #endif
