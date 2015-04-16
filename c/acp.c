@@ -40,6 +40,7 @@ void fuchsian(number root[4], number limit) {
     llaAppend(&ancestors, nodeArrayInitWithArray(root));
     struct NodeArray *n = NULL;
     unsigned long long int count = 0;
+    unsigned long long int interval = ceiling / 10;
     unsigned char i;
     number prime[4];
     long long int transformed[4];
@@ -54,6 +55,13 @@ void fuchsian(number root[4], number limit) {
         transformed[2] = -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
         transformed[3] = -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
 
+        if (count % interval == 0)
+        {
+            printf("%lldth iteration: %lld %lld %lld %lld\n", 
+                    count, transformed[0], transformed[1], 
+                    transformed[2], transformed[3]);
+        }
+
         /*
         transformed[4] = 
             {-3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1),
@@ -67,12 +75,6 @@ void fuchsian(number root[4], number limit) {
             if ( (n->val[i] < transformed[i]) 
                  && (transformed[i] < limit))
             {
-                if (count % 1000000 == 0)
-                {
-                    printf("%lldth iteration: %lld %lld %lld %lld\n", 
-                           count, transformed[0], transformed[1], 
-                           transformed[2], transformed[3]);
-                }
                 /*
                 if (transformed[i] == 0)
                 {
