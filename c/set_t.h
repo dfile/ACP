@@ -1,4 +1,4 @@
-// Set implemented as a byte array
+// Set implemented as a bit array
 
 #ifndef SET_T_H_
 #define SET_T_H_
@@ -8,10 +8,11 @@
 typedef char byte;
 
 typedef struct set_s {
-    byte *items;
-    unumber num_items;
-    number zero;
-    unumber len;
+    byte *items;        // items of the set
+    unumber num_items;  // number of items set to 1 in set
+    number zero;        // offset low range to 0 index
+    unumber len;        // array length of items
+    unumber capacity;   // how many numbers can be held in items
 } set_t;
 
 // Initializers
@@ -32,26 +33,30 @@ typedef struct set_s {
 
 // Setters and Getters
 
- byte*         setGetItems(set_t *s);
- void          setSetItems(set_t *s, byte *b);
+ byte*        setGetItems(set_t *s);
+ void         setSetItems(set_t *s, byte *b);
 
- unumber setGetNumItems(set_t *s);
+ unumber      setGetNumItems(set_t *s);
  void         setSetNumItems(set_t *s, unumber n);
 
- unumber setGetLen(set_t *s);
+ unumber      setGetLen(set_t *s);
  void         setSetLen(set_t *s, unumber len);
 
- number          setGetZero(set_t *s);
+ number       setGetZero(set_t *s);
  void         setSetZero(set_t *s, number zero);
 
- number          setGetLowRange(set_t *s);
- number          setGetHighRange(set_t *s);
+ unumber      setGetCapacity(set_t *s);
+ void         setSetCapacity(set_t *s, unumber capacity);
+ void         setSetCapacityWithLen(set_t *s, unumber len);
+
+ number       setGetLowRange(set_t *s);
+ number       setGetHighRange(set_t *s);
 
 // Set Element Operations
 
- number          setAdd(set_t *s, number a);
+ number       setAdd(set_t *s, number a);
 
- number          setRemove(set_t *s, number r);
+ number       setRemove(set_t *s, number r);
 
  byte         setExists(set_t *s, number e);
 

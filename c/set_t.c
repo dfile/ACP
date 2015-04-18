@@ -16,7 +16,8 @@ set_t* setInit(void)
 set_t* setInitWithLenAndZero(unumber len, number zero)
 {
     //printf("malloc set items: "NUMFORM" bytes\n", sizeof(byte) * len);
-    byte *b = (byte *)malloc(sizeof(byte) * (len));
+    unumber cap = ((len - 1) / 8) + 1;
+    byte *b = (byte *)malloc(sizeof(byte) * (cap));
     if (b == NULL) 
     {
         fprintf(stderr, "ERR: Couldn't malloc in setInitWithLenAndZero()\n");
@@ -24,7 +25,7 @@ set_t* setInitWithLenAndZero(unumber len, number zero)
     }
     else
     {
-        memset(b, 0, len);
+        memset(b, 0, cap);
     }
     set_t *s = setInitWithLenAndZeroAndItems(len, zero, b);
     return s;
@@ -47,6 +48,7 @@ set_t* setInitWithLenAndZeroAndItems(unumber len, number zero, byte *items)
     setSetNumItems(set, 0);
     setSetLen(set, len);
     setSetZero(set, zero);
+    setSetCapacityWithLen(set, len);
     return set;
 }
 
@@ -85,8 +87,21 @@ byte setSetItem(set_t *s, number n, byte b)
         {
             if (setIsInRange(s, n))
             {
+                byte mask = 0;
+                mask = b ? b : 1;
                 unumber index = setOffsetToZero(s, n);
-                s->items[index] = b;
+                unumber i = index / 8;
+                byte pos = index % 8;
+                mask = mask << pos;
+                if (b != 0)
+                {
+                    s->items[i] = s->items[i] | mask;
+                }
+                else
+                {
+                    mask = ~mask;
+                    s->items[i] = s->items[i] & mask;
+                }
                 return 0;
             }
             else
@@ -201,6 +216,44 @@ void setSetZero(set_t *s, number zero)
     }
 }
 
+unumber setGetCapacity(set_t *s)
+{
+    if (s != NULL) { return s->capacity; }
+    else
+    {
+        fprintf(stdout, "set_t NULL in setGetCapacity()\n");
+        return 0;
+    }
+}
+
+void setSetCapacity(set_t *s, unumber capacity)
+{
+    if (s != NULL)
+    {
+        s->capacity = capacity;
+    }
+    else
+    {
+        fprintf(stderr, "Trying to set capacity of NULL set in setSetCapacity()\n");
+        exit(1);
+        return;
+    }
+}
+
+void setSetCapacityWithLen(set_t *s, unumber len)
+{
+    if (s != NULL)
+    {
+        s->capacity = ((len - 1) / 8) + 1;
+    }
+    else
+    {
+        fprintf(stderr, "Trying to set capacity of NULL set in setSetCapacity()\n");
+        exit(1);
+        return;
+    }
+}
+
 number setGetLowRange(set_t *s)
 {
     return (0 - setGetZero(s));
@@ -228,8 +281,12 @@ byte setExists(set_t *s, number e)
             if (setIsInRange(s, e))
             {
                 
-                number index = setOffsetToZero(s, e);
-                return setGetItems(s)[index];
+                unumber index = setOffsetToZero(s, e);
+                unumber i = index / 8;
+                byte pos = index % 8;
+                byte mask = 1 << pos;
+                
+                return (setGetItems(s)[i] & mask);
             }
             else
             {
@@ -372,6 +429,7 @@ void setPrint(set_t *s, byte opt)
         printf("Set num_items: "UNUMFORM"\n", setGetNumItems(s));
         printf("Set zero: "NUMFORM"\n", setGetZero(s));
         printf("Set len: "UNUMFORM"\n", setGetLen(s));
+        printf("Set capacity: "UNUMFORM"\n", setGetCapacity(s));
         char *range = setGetRange(s);
         printf("Set range: %s\n", range);
         free(range);
@@ -382,7 +440,7 @@ void setPrint(set_t *s, byte opt)
             if (opt == 2) { setPrintVerbose(s); }
             else if (opt == 1) { setPrintByteArray(s); }
             // this is the default print method
-            else if (opt == 0 || 1) { setPrintDefault(s); }
+            else if (1 || opt == 0) { setPrintDefault(s); }
         }
     }
 }
@@ -394,7 +452,7 @@ void setClear(set_t *s)
         if (setGetItems(s) != NULL)
         {
             setSetNumItems(s, 0);
-            memset(setGetItems(s), 0, s->len);
+            memset(setGetItems(s), 0, s->capacity);
         }
     }
 }
