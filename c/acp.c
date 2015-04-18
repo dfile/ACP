@@ -71,7 +71,10 @@ void fuchsian(number root[4], number limit) {
                 memcpy(prime, n->val, 4*sizeof(number));
                 prime[i] = transformed[i];
                 llaPush(&ancestors, nodeArrayInitWithArray(prime));
-                setAdd(CURVELIST, transformed[i]);
+                if (setAdd(CURVELIST, transformed[i]) < 0)
+                {
+                    exit(1);
+                }
             }
         }
 
@@ -90,7 +93,10 @@ set_t* valuesOf(struct LinkedListArray* quadList) {
         unsigned char i;
         for (i = 0; i < 4; i++)
         {
-            setAdd(possible, ruple->val[i]);
+            if (setAdd(possible, ruple->val[i]) < 0)
+            {
+                exit(1);
+            }
         }
     }
 
@@ -193,7 +199,10 @@ set_t* path(set_t *valList, number top) {
         if ((i % 24) < 0) { printf("mod in path was negative"); }
         if (setExists(valList, (i % 24)))
         {
-            setAdd(could, i);
+            if (setAdd(could, i) < 0)
+            {
+                exit(1);
+            }
         }
     }
 
@@ -225,7 +234,10 @@ ll* seek(number root[4], number cap)
     number i = 0;
     for (i = 0; i < 4; i++)
     {
-        setAdd(CURVELIST, root[i]);
+        if (setAdd(CURVELIST, root[i]) < 0)
+        {
+            exit(1);
+        }
     } 
 
     printf("In seek\n");

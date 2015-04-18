@@ -4,3 +4,4 @@ gmon.out
 scratch.sh
 *.o
 *.swp
+*.sh

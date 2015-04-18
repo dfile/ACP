@@ -43,7 +43,7 @@ int main(void)
     setAdd(s1,-3);
 
     setPrint(s1,2);
-    //setPrint(s1,0);
+    setPrint(s1,0);
     
     printf("\nDoes -1 exist in set?\n");
     printf("%d\n",(int)setExists(s1,-1));
@@ -58,7 +58,6 @@ int main(void)
     printf("\nRemoving 4 from set\n");
     setRemove(s1,4);
     setPrint(s1,2);
-
     printf("\nRemoving -11 from set\n");
     setRemove(s1,-11);
     setPrint(s1,2);
@@ -93,7 +92,7 @@ int main(void)
    
     // create a set that holds -2 to 7 using the range initializer
     set_t *s3 = setInitWithRange(-2, 7);
-    printf("\nCreated a new set with range of -2 to 10\n");
+    printf("\nCreated a new set with range of -2 to 7\n");
     setPrint(s3,2);
     
     printf("\nAdding numbers to set...\n");

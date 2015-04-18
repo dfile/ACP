@@ -1,6 +1,7 @@
+#!/usr/bin/python
 #import the deque class
 from collections import deque
-
+import sys
 
 #Global list of all curvatures in the packing
 CURVELIST = set()
@@ -135,7 +136,13 @@ def seek(root, cap):
     return missing
 
 # seek([-1,2,2,3], 10000000)
-seek([-3,4,12,13], 10000000)
+a=int(sys.argv[1])
+b=int(sys.argv[2])
+c=int(sys.argv[3])
+d=int(sys.argv[4])
+ceiling=int(sys.argv[5])
+
+seek([a,b,c,d], ceiling)
 # print CURVELIST
 # print " Length: " + str(len(CURVELIST))
 
