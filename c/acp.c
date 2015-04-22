@@ -14,7 +14,7 @@ number LOW;  // the smallest curvature in root quad, used to determine set_t ran
 
 set_t *CURVELIST;
 
-number ceiling;
+long long int ceiling;
 
 time_t t;
 char *timestamp;
@@ -303,12 +303,12 @@ int main(int argc, char *argv[]) {
         if (root[index] < LOW) { LOW = root[index]; }
     }
 
-    ceiling = (number)strtol(argv[5], NULL, 10);
+    ceiling = (long long int)strtoll(argv[5], NULL, 10);
     CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("Running seek with root {");
     for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
-    printf("} and ceiling "NUMFORM"\n", ceiling);
+    printf("} and ceiling %lld\n", ceiling);
 
     printTime();
 
