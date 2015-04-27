@@ -35,6 +35,7 @@ void llaDestroy(struct LinkedListArray *lla)
         {
             temp = llaPop(lla);
             nodeArrayDestroy(temp);
+            temp = NULL;
         }
     }
     //free(lla->header);

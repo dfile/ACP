@@ -57,6 +57,7 @@ void fuchsian(number root[4], number limit) {
 
         if (count % interval == 0)
         {
+            printTime();
             printf("%lldth iteration: %lld %lld %lld %lld\n", 
                     count, transformed[0], transformed[1], 
                     transformed[2], transformed[3]);
@@ -125,14 +126,17 @@ struct LinkedListArray* transformOrbit(number quad[4], struct LinkedListArray* o
     memcpy(family[0], ((number [4]){aPos,   b % 24, c % 24, d % 24}), 4*sizeof(number));
     memcpy(family[1], ((number [4]){a % 24, bPos,   c % 24, d % 24}), 4*sizeof(number));
     memcpy(family[2], ((number [4]){a % 24, b % 24, cPos,   d % 24}), 4*sizeof(number));
-    memcpy(family[3], ((number [4]){a % 24, b % 24, c % 24, dPos}),   4*sizeof(number));
+    memcpy(family[3], ((number [4]){a % 24, b % 24, c % 24, dPos  }), 4*sizeof(number));
 
     unsigned char i;
+    struct NodeArray *ptr = NULL;
+    unsigned int matched = 0;
+    int match = 1;
     for (i = 0; i < 4; i++)
     {
-        struct NodeArray *ptr = NULL;
-        unsigned int matched = 0;
-        int match = 1;
+        ptr = NULL;
+        matched = 0;
+        match = 1;
         for (ptr = orbit->header; ptr != NULL; ptr = ptr->next)
         {
             // If memcmp finds family[i] in orbit, match will be 0
@@ -174,13 +178,14 @@ struct LinkedListArray* genealogy(number seed[4]) {
 
     llaAppend(ancestors, nodeArrayInitWithArray(modSeed));
     llaAppend(orbit, nodeArrayInitWithArray(modSeed));
-
+    struct LinkedListArray *newGeneration = NULL;
     struct NodeArray *parent = NULL;
     for (parent = ancestors->header; parent != NULL; parent = parent->next)
     {
-        struct LinkedListArray *newGeneration = transformOrbit(parent->val, orbit);
+        newGeneration = transformOrbit(parent->val, orbit);
         llaExtend(ancestors, newGeneration);
         free(newGeneration);
+        newGeneration = NULL;
     }
     llaDestroy(ancestors);
 
@@ -216,6 +221,7 @@ ll* compare(set_t *valuesGlobal) {
     number i = 0;
     for (i = LOW; i <= ceiling; i++)
     {
+        // TODO: this could be made faster by using bitwise &
         if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
         {
             node *n = (node *)nodeInitWithInt(i);
