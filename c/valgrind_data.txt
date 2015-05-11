@@ -1,0 +1,70 @@
+Running seek with root {-1,2,2,3,} and ceiling 1000
+Time: Sun May 10 18:24:34 2015
+
+In seek
+Running fuchsian
+Time: Sun May 10 18:24:34 2015
+
+100th iteration: 2279 2678 38 1715
+Time: Sun May 10 18:24:34 2015
+
+200th iteration: 231 414 18 387
+Time: Sun May 10 18:24:34 2015
+
+300th iteration: 95 494 1058 1043
+Time: Sun May 10 18:24:34 2015
+
+400th iteration: 1679 290 1658 563
+Time: Sun May 10 18:24:34 2015
+
+500th iteration: 815 146 266 803
+Time: Sun May 10 18:24:34 2015
+
+600th iteration: 47 254 530 539
+Time: Sun May 10 18:24:34 2015
+
+700th iteration: 1503 1386 6 1035
+Time: Sun May 10 18:24:34 2015
+
+800th iteration: 479 746 674 11
+Time: Sun May 10 18:24:34 2015
+
+900th iteration: 695 494 2 539
+Time: Sun May 10 18:24:34 2015
+
+1000th iteration: 167 1394 2570 2699
+Time: Sun May 10 18:24:34 2015
+
+1100th iteration: 543 522 66 219
+Time: Sun May 10 18:24:34 2015
+
+1200th iteration: 2351 26 1538 1955
+Time: Sun May 10 18:24:34 2015
+
+1300th iteration: 623 1370 1346 131
+Time: Sun May 10 18:24:34 2015
+
+1400th iteration: 119 962 398 971
+Time: Sun May 10 18:24:34 2015
+
+1500th iteration: 2735 2 1946 2627
+Time: Sun May 10 18:24:34 2015
+
+1600th iteration: 279 210 318 3
+CURVELIST num_items: 325
+Time: Sun May 10 18:24:34 2015
+
+Running genealogy
+Time: Sun May 10 18:24:34 2015
+
+Running valuesOf
+Time: Sun May 10 18:24:34 2015
+
+Running path
+Time: Sun May 10 18:24:34 2015
+
+Running compare
+
+ Length=10 [78, 159, 207, 243, 246, 342, 435, 603, 711, 834]
+Time: Sun May 10 18:24:34 2015
+

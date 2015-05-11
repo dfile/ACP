@@ -25,39 +25,39 @@ typedef struct LinkedListArray {
 } lla;
 
 // Create and return an empty linked list.
-struct LinkedListArray* llaInit(void);
+lla*   llaInit(void);
 
 // Destroy linked list and the nodes it contains
-void llaDestroy(struct LinkedListArray *lla);
+void   llaDestroy(struct LinkedListArray *lla);
 
 // Create and return an empty node (value initialized to 0).
-struct NodeArray* nodeArrayInit(void);
+nodeA* nodeArrayInit(void);
 
 // Create and return a node with an array of 4 numbers.
-struct NodeArray* nodeArrayInitWithArray(number arr[4]);
+nodeA* nodeArrayInitWithArray(number arr[4]);
 
 // Destroy a nodeArray and the array it contains
-void nodeArrayDestroy(struct NodeArray *node);
+void   nodeArrayDestroy(struct NodeArray *node);
 
 // Append a node to the back of a linked list.
-void llaAppend(struct LinkedListArray *lla, struct NodeArray *node);
+void   llaAppend(struct LinkedListArray *lla, struct NodeArray *node);
 
 // Push a node onto the front of a linked list.
-void llaPush(struct LinkedListArray *lla, struct NodeArray *node);
+void   llaPush(struct LinkedListArray *lla, struct NodeArray *node);
 
 // Remove and return node from front of list.
-struct NodeArray* llaPop(struct LinkedListArray *lla);
+nodeA* llaPop(struct LinkedListArray *lla);
 
 // Remove and return node from back of list.
-struct NodeArray* llaPopBack(struct LinkedListArray *lla);
+nodeA* llaPopBack(struct LinkedListArray *lla);
 
 // Extend a list by another list (extend lla by ext)
-void llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext);
+void   llaExtend(struct LinkedListArray *lla, struct LinkedListArray *ext);
 
 // Print a linked list from front to back.
-void llaPrint(struct LinkedListArray *lla);
+void   llaPrint(struct LinkedListArray *lla);
 
 // Print a node's array
-void nodeArrayPrint(struct NodeArray *node);
+void   nodeArrayPrint(struct NodeArray *node);
 
 #endif

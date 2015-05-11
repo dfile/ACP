@@ -31,7 +31,8 @@ void llaDestroy(struct LinkedListArray *lla)
         // delete each node in list
         number i = 0;
         struct NodeArray *temp;
-        for (i = 0; i < lla->len; i++)
+        number tempLen = lla->len;
+        for (i = 0; i < tempLen; i++)
         {
             temp = llaPop(lla);
             nodeArrayDestroy(temp);
