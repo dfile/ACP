@@ -27,16 +27,13 @@ void llDestroy(struct LinkedList *ll)
     else if (ll->len != 0)
     {
         // delete each node in list
-        number i = 0;
         struct Node *temp;
-        for (i = 0; i < ll->len; i++)
+        while (ll->len != 0)
         {
             temp = llPop(ll);
             nodeDestroy(temp);
         }
     }
-    //free(ll->header);
-    //free(ll->tail);
     //printf("destroy LinkedList struct\n");
     free(ll);
 }
