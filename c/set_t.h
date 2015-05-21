@@ -5,7 +5,7 @@
 
 #include "typedefs.h"
 
-typedef char byte;
+typedef unsigned char byte;
 
 typedef struct set_s {
     byte *items;        // items of the set
@@ -33,11 +33,14 @@ typedef struct set_s {
 
 // Setters and Getters
 
+ byte         setSetItem(set_t *s, number n, byte b);
+
  byte*        setGetItems(set_t *s);
  void         setSetItems(set_t *s, byte *b);
 
  unumber      setGetNumItems(set_t *s);
  void         setSetNumItems(set_t *s, unumber n);
+ void         setResetNumItems(set_t *s);
 
  unumber      setGetLen(set_t *s);
  void         setSetLen(set_t *s, unumber len);

@@ -259,37 +259,61 @@ void llaPrint(struct LinkedListArray *lla) {
 }
 
 // Print a node using printf
-void nodeArrayPrint(struct NodeArray *node) {
+void nodeArrayPrint(struct NodeArray *node) 
+{
+    char buf[30] = {0};
+    nodeArrayToString(node, buf);
+    printf("%s", buf);
+}
 
+// Create the string representation of a node.
+// Ensure buf is large enough to hold the string (>30 bytes)
+// Also ensure buf is clear of strings before calling
+void nodeArrayToString(struct NodeArray *node, char *buf)
+{
     number i;
     if (node == NULL)
     {
-        printf("NULLNODE");
+        sprintf(buf, "NULLNODE");
     }
     else if (node->val == NULL)
     {
-        printf("NULL");
+        sprintf(buf, "NULL");
     }
     else
     {
-        printf("[");
+        char temp[30];
+        sprintf(buf, "["); // First sprintf clears buf
         for (i = 0; 
-                i < (sizeof(node->val) / sizeof(node->val[0]));
-                i++)
+             i < (sizeof(node->val) / sizeof(node->val[0]));
+             i++)
         {
             if (i + 1 == (sizeof(node->val) / sizeof(node->val[0])))
             {
-                printf(""NUMFORM"", node->val[i]);
+                sprintf(temp, ""NUMFORM"", node->val[i]);
+                strcat(buf, temp);
             }
             else
             {
-                printf(""NUMFORM",", node->val[i]);
+                sprintf(temp, ""NUMFORM",", node->val[i]);
+                strcat(buf, temp);
             }
         }
-        printf("]");
-        if (node->prev) { printf("S"); } else { printf("N"); }
-        if (node->next) { printf("S"); } else { printf("N"); }
+        strcat(buf, "]");
+        if (node->prev) { 
+            sprintf(temp, "S"); 
+            strcat(buf, temp);
+        } else { 
+            sprintf(temp, "N"); 
+            strcat(buf, temp);
+        }
 
+        if (node->next) { 
+            sprintf(temp, "S"); 
+            strcat(buf, temp);
+        } else { 
+            sprintf(temp, "N"); 
+            strcat(buf, temp);
+        }
     }
-
 }

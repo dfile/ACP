@@ -8,4 +8,7 @@ typedef long long int number;
 typedef unsigned long long int unumber;
 
 #define STDERROR stderr
+
+#define DEBUGGING 0
+
 #endif

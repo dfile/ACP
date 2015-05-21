@@ -172,6 +172,32 @@ void setSetNumItems(set_t *s, unumber n)
     }
 }
 
+void setResetNumItems(set_t *s)
+{
+    if (s != NULL)
+    {
+        unumber i = 0;
+        unumber c = 0;
+        //unumber j = 0;
+        byte *items = setGetItems(s);
+        for (i = 0; i < setGetCapacity(s); i++)
+        {
+            byte b = items[i];
+            for (; b; b >>= 1)
+            {
+                c += b & 1;
+                //printf("%d\n", j++);
+            }
+        }
+        setSetNumItems(s, c);
+    }
+    else
+    {
+        fprintf(stderr, "Trying to reset num_items of NULL set in setSetNumItems()\n");
+        exit(1);
+    }
+}
+
 unumber setGetLen(set_t *s)
 {
     if (s != NULL) { return s->len; }
