@@ -43,7 +43,9 @@ void* fuchsianThread(void *args)
     ancestors.len = 0;
 
     nodeA *rootNode = nodeArrayInitWithArray(quad);
+#if DEBUGGING
     rootNode->lvl = 0;
+#endif
 
     llaAppend(&ancestors, rootNode);
     struct NodeArray *n = NULL;
