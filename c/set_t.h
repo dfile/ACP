@@ -31,6 +31,10 @@ typedef struct set_s {
 
  void setDestroy(set_t *s);
 
+// Convenience Functions
+
+ unumber setOffsetToZero(set_t *s, number n);
+
 // Setters and Getters
 
  byte         setSetItem(set_t *s, number n, byte b);
