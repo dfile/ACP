@@ -1,5 +1,8 @@
 // C version of acp code
 
+/********************
+ * Includes         *
+ ********************/
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -17,21 +20,26 @@
 #include "LinkedList.h"
 #include "set_t.h"
 
+// a struct to hold information about a child process and
+// its pipes.
 typedef struct child_process_s
 {
     pid_t pid;
     int pipes[2];
 } child_process_t;
 
-// the root quadruple, declared as a global variable to allow child
-// processes to access it
-number *ROOT = NULL;
-number ROOTS[4][4];
-unsigned char num_roots = 0;
-unsigned char my_root;
+/********************
+ * Global Variables *
+ ********************/
 
-// child's pipe
-int *my_pipe;
+// The main process runs transforms the root quadruple into
+// at least 4 quadruples to be processed by each child.
+number child_roots[4][4];
+unsigned char num_roots = 0;
+unsigned char child_root;   // for use by child
+
+// child's pipe, for use by child
+int *child_pipe;
 
 // children
 child_process_t children_fuchsian[4];
@@ -47,11 +55,19 @@ long long int ceiling;
 const int PIPE_W = 1;     // aliases
 const int PIPE_R = 0;
 
+// Timing variables
 time_t t;
 time_t start_time;
 time_t end_time;
 char *timestamp;
 
+/********************
+ * Functions        *
+ ********************/
+
+/*
+ * Convenience function to print the time.
+ */
 void printTime()
 {
     time(&t);
@@ -60,9 +76,13 @@ void printTime()
 }
 
 /**
+ * fuchsian transforms a root quadruple and its descendants up
+ * to a previously defined ceiling, where ceiling is the size
+ * of the largest desired curvature. The curvatures are saved
+ * in CURVELIST.
+ *
  * input:  root (the initial quadruple that defines the packing)
  *         limit (arbitrary limit we don't want to go above)
- * output: ancestors (list of quadruples all below the limit)
  */
 void fuchsian(number root[4]) 
 {
@@ -111,15 +131,21 @@ void fuchsian(number root[4])
     unumber index = 0;
     for (index = 0; index < capacity; index++)
     {
-        write(my_pipe[PIPE_W], &(CURVELIST->items[index]), sizeof(byte));
+        write(child_pipe[PIPE_W], &(CURVELIST->items[index]), sizeof(byte));
     }
 
     return;
 }
 
+/**
+ * fuchsian_divide takes a root quadruple and transforms it
+ * once to get at least 4 unique quadruples. The quads are
+ * saved in child_roots.
+ * input: a root quadruple of numbers
+ */
 void fuchsian_divide(number root[4])
 {
-    memset(ROOTS, 0, sizeof(ROOTS));
+    memset(child_roots, 0, sizeof(child_roots));
     number transformed[4];
     transformed[0] = -3 * root[0] + ((root[0] + root[1] + root[2] + root[3]) << 1);
     transformed[1] = -3 * root[1] + ((root[0] + root[1] + root[2] + root[3]) << 1);
@@ -136,7 +162,7 @@ void fuchsian_divide(number root[4])
         {
             memcpy(prime, root, 4*sizeof(number));
             prime[i] = transformed[i];
-            memcpy(ROOTS[num_roots], prime, sizeof(prime[0]) * 4);
+            memcpy(child_roots[num_roots], prime, sizeof(prime[0]) * 4);
             ++num_roots;
         }
     }
@@ -273,112 +299,142 @@ ll* pathAndCompare(set_t *valList) {
     return missing;
 }
 
-ll* compare(set_t *valuesGlobal) {
-
-    ll *missing = (ll *)llaInit();
-    number i = 0;
-    for (i = LOW; i <= ceiling; i++)
-    {
-        // TODO: this could be made faster by using bitwise &
-        if (setExists(valuesGlobal, i) && !setExists(CURVELIST, i))
-        {
-            node *n = (node *)nodeInitWithInt(i);
-            llAppend(missing, n);
-        }
-    }
-
-    return missing;
-
-}
-
+/**
+ * child_fuchsian is run by child processes on a "branch" of 
+ * a root quadruple. The function runs fuchsian on the quad
+ * and saves them in CURVELIST. When finished, the child
+ * sends the bytes of CURVELIST over the pipe to the main
+ * process.
+ *
+ * input: unsigned char representing the index of this child
+ *        in the children_fuchsian array
+ */
 void child_fuchsian(const unsigned char child)
 {
+    // create CURVELIST here. n.b. this isn't created in
+    // the parent because fork can't handle large
+    // allocations of memory (~1GB)
     CURVELIST = setInitWithRange(LOW, ceiling);
-    my_pipe = children_fuchsian[child].pipes;
+    // get a convenient pointer to the child's pipe
+    child_pipe = children_fuchsian[child].pipes;
     printf("I'm child %u\n", (unsigned int)child);
-    close(my_pipe[PIPE_R]);    // child is writing only
+    close(child_pipe[PIPE_R]);    // child is writing only
     printf("Running fuchsian\n");
     fflush(stdout);
-    fuchsian(ROOTS[my_root]);
+    // Run fuchsian on the root given to it by the main process
+    fuchsian(child_roots[child_root]);
     printf("exiting child %u\n", (unsigned int)child);
     fflush(stdout);
+    // destroy CURVELIST, it's been transmitted in fuchsian
+    // to the main process
     setDestroy(CURVELIST);
+    // exit successfully
     exit(0);
 }
 
+/**
+ * receive_fuchsian_curvatures allows the main process to receive
+ * curvatures over a pipe from the child processes and put them
+ * in CURVELIST.
+ * 
+ * input: number of existing pipes (corresponds to number of children)
+ */
 void receive_fuchsian_curvatures(const int max_pipe_num)
 {
-    byte aByte = 0;
-    unumber byte_num = 0;
-    int pipe_num = 0;
-    int ret_val;
+    byte aByte = 0;         // received bytes go here temporarily
+    unumber byte_num = 0;   // number of received bytes
+    int pipe_num = 0;       // pipe currently reading from
+    int ret_val;            // holds return values from read
+    // read from one child's pipe until it finishes, then move on to
+    // the next child
     while (pipe_num < max_pipe_num)
     {
+        // check if we've received all the bytes
         if (byte_num < CURVELIST->capacity)
         {
+            // get a byte from the pipe
             ret_val = read(children_fuchsian[pipe_num].pipes[PIPE_R], 
                            &aByte, 
                            sizeof(aByte));
         }
+        // we've received all the pipes, move on to the next one
+        //XXX: use a different code than -1 to allow error detection
         else
         { ret_val = -1; }
+        // check ret_val for errors or end of reading
         if (ret_val != -1) 
         { 
+            // not end of reading, add the byte to CURVELIST.
+            // this is being done manually to increase performance
             CURVELIST->items[byte_num] = CURVELIST->items[byte_num] | aByte;
             ++byte_num;
         }
+        //FIXME: this code assumes -1 is end of reading and ignores errors
         else
         { 
-            ++pipe_num; 
-            aByte = 0;
-            byte_num = 0;
+            // end of reading, go to next pipe and wait for child to terminate
+            ++pipe_num;     // go to next pipe
+            aByte = 0;      // reset variables
+            byte_num = 0;   // reset variables
             printf("one child finished, waiting on it\n");
             fflush(stdout);
-            int status;
-            waitpid(-1, &status, 0);
+            int status;     // hold return value of wait, not currently used
+            waitpid(-1, &status, 0);    // wait for child to terminate
         }
     } // end while
 } // end receive_fuchsian_curvatures
 
+/**
+ * Seek finds the missing curvatures in the packing generated by the
+ * root quadruple.
+ * 
+ * input: a root quadruple (array of 4 numbers)
+ * output: list of missing curvatures
+ */
 ll* seek(number root[4])
 {
 
     printf("In seek\n");
 
-
+    // transform root into at least 4 roots for children
     fuchsian_divide(root);
     memset(children_fuchsian, 0, sizeof(children_fuchsian[0]) * 4);
     unsigned char num_children = 0;
     // make the children for fuchsian
     for (num_children = 0; num_children < num_roots; num_children++)
     {
+        // make pipe to child
         pipe(&(children_fuchsian[num_children].pipes[0])); 
-        my_root = num_children; 
+        // set child's number for child's reference
+        child_root = num_children; 
         printf("making child %u...\n", (unsigned int)num_children);
         fflush(stdout);
+        // try fork
         if ((children_fuchsian[num_children].pid = fork()) == -1)
         {
             fprintf(STDERROR, "error making fork\n");
             exit(1);
         }
+        // fork succeeded
         else if (children_fuchsian[num_children].pid == 0)     
         { child_fuchsian(num_children); } // child's start of execution
-        // parent is reading only
+        // parent is reading only, close writing end of pipe in parent
         close(children_fuchsian[num_children].pipes[PIPE_W]);    
     }
-
     // Only parent gets past the for loop
-    // Receive fuchsian results from children and put them in CURVELIST
+
     CURVELIST = setInitWithRange(LOW, ceiling);
     unsigned char i = 0;
+    // Add root to CURVELIST
     for (i = 0; i < 4; i++)
     {
         if (setAdd(CURVELIST, root[i]) < 0)
         { exit(1); }
     } 
+    // Receive fuchsian results from children and put them in CURVELIST
     receive_fuchsian_curvatures(num_children);
 
-#if DEBUGGING
+#if DEBUGGING // debugging code
     printf("CURVELIST capacity:  %d\n", (int)setGetCapacity(CURVELIST));
     printf("CURVELIST num_items: "NUMFORM"\n", setGetNumItems(CURVELIST));
     setPrint(CURVELIST, 0);
@@ -406,14 +462,20 @@ ll* seek(number root[4])
 
     setDestroy(CURVELIST);
 
+    // return curvatures missing from packing
     return nope;
 }
 
+/********************
+ * Main             *
+ ********************/
+
 int main(int argc, char *argv[]) {
     
+    // Record the start time
     time(&start_time);
 
-
+    // exit if there are an incorrect number of arguments
     if (argc != 6)
     {
         fprintf(stderr, "ERR: Incorrect number of arguments.\n");
@@ -425,31 +487,34 @@ int main(int argc, char *argv[]) {
     number root[4] = {0,0,0,0};
 
     unsigned char arg = 1;
+    // convert command line arguments to curvatures for roots
     for (arg = 1; arg < 5; arg++)
     {
         root[arg-1] = (number)strtol(argv[arg], NULL, 10);
     }
-    ROOT = root;
 
+    // find the lowest curvature in root
     number index = 0;
-    LOW = ROOT[0];
+    LOW = root[0];
     for (index = 0; index < 4; index++)
     {
-        if (ROOT[index] < LOW) { LOW = ROOT[index]; }
+        if (root[index] < LOW) { LOW = root[index]; }
     }
 
-    ceiling = (long long int)strtoll(argv[5], NULL, 10);
+    // convert command line argument to number for ceiling
+    ceiling = (unumber)strtoll(argv[5], NULL, 10);
 
     printf("==========\n");
     printf("Running seek with root {");
-    for (index = 0; index < 4; index++) { printf(NUMFORM",",ROOT[index]); }
+    for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
     printf("} and ceiling %lld\n", ceiling);
 
     printTime();
 
     fflush(stdout);
 
-    ll *results = seek(ROOT);
+    // run seek using the root quadruple
+    ll *results = seek(root);
     llPrint(results, 0);
 
     printTime();
@@ -458,8 +523,10 @@ int main(int argc, char *argv[]) {
 
     llDestroy(results);
 
+    // Record the end time of execution and print the run time
     time(&end_time);
     printf("run time: %f\n==========\n", difftime(end_time, start_time));
     
+    // Exit successfully
     return 0;
 }  
