@@ -19,14 +19,7 @@
 #include "LinkedListArray.h"
 #include "LinkedList.h"
 #include "set_t.h"
-
-// a struct to hold information about a child process and
-// its pipes.
-typedef struct child_process_s
-{
-    pid_t pid;
-    int pipes[2];
-} child_process_t;
+#include "child_process_t.h"
 
 /********************
  * Global Variables *
