@@ -89,8 +89,6 @@ inline byte setSetItem(set_t *s, number n, byte b)
             {
                 byte mask = b ? b : 1;
                 unumber index = setOffsetToZero(s, n);
-                //unumber i = index / 8;
-                //byte pos = index % 8;
                 mask = mask << (index % 8);
                 if (b != 0)
                 {
@@ -98,7 +96,6 @@ inline byte setSetItem(set_t *s, number n, byte b)
                 }
                 else
                 {
-                    //mask = ~mask;
                     s->items[index / 8] = s->items[index / 8] & ~mask;
                 }
                 return 0;

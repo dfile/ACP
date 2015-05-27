@@ -7,10 +7,34 @@
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <limits.h>
+#include <fcntl.h>
 #include "typedefs.h"
 #include "LinkedListArray.h"
 #include "LinkedList.h"
 #include "set_t.h"
+
+typedef struct child_process_s
+{
+    pid_t pid;
+    int pipes[2];
+} child_process_t;
+
+// the root quadruple, declared as a global variable to allow child
+// processes to access it
+number *ROOT = NULL;
+number ROOTS[4][4];
+unsigned char num_roots = 0;
+unsigned char my_root;
+
+// child's pipe
+int *my_pipe;
+
+// children
+child_process_t children_fuchsian[4];
 
 // the smallest curvature in root quad, used to determine set_t range
 number LOW;  
@@ -18,6 +42,10 @@ number LOW;
 set_t *CURVELIST;
 
 long long int ceiling;
+
+// file descriptors for pipes between processes
+const int PIPE_W = 1;     // aliases
+const int PIPE_R = 0;
 
 time_t t;
 time_t start_time;
@@ -31,208 +59,89 @@ void printTime()
     printf("Time: %s\n", timestamp);
 }
 
-void* fuchsianThread(void *args)
-{
-    number quad[4];
-    memcpy(quad, args, 4 * sizeof(number));
-    free(args);
-
-    struct LinkedListArray ancestors;
-    ancestors.header = NULL;
-    ancestors.tail = NULL;
-    ancestors.len = 0;
-
-    nodeA *rootNode = nodeArrayInitWithArray(quad);
-#if DEBUGGING
-    rootNode->lvl = 0;
-#endif
-
-    llaAppend(&ancestors, rootNode);
-    struct NodeArray *n = NULL;
-    unsigned char i;
-    number prime[4];
-    long long int transformed[4];
-
-#if DEBUGGING
-    pthread_t self = pthread_self();
-
-    // XXX: This buffer is a potential segfault. Just know that
-    // if this run has unusually long output, it will
-    // cause this to segfault.
-    char buf[1000*1000]; // 1 MB buffer
-    memset(buf, 0, sizeof(1000*1000));
-    buf[0] = '\0'; // Allows use of strcat
-    sprintf(buf, "Thread %u\n", (unsigned int)self);
-#endif
-
-    while (ancestors.len > 0)
-    {
-        n = llaPop(&ancestors);
-
-#if DEBUGGING
-        char temp[1000];
-        memset(temp, 0, 1000);
-
-        unsigned int numTabs = 0;
-
-        for (; numTabs < n->lvl; numTabs++) 
-        { 
-            strcat(buf, "|  "); 
-        }
-        nodeArrayToString(n, temp);
-        strcat(buf, temp);
-        strcat(buf, "\n");
-#endif
-
-        transformed[0] = 
-                -3 * n->val[0] 
-                + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[1] = 
-                -3 * n->val[1] 
-                + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[2] = 
-                -3 * n->val[2] 
-                + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[3] = 
-                -3 * n->val[3] 
-                + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        
-        for (i = 0; i < 4; i++)
-        {
-#if DEBUGGING
-            if (i == 0) {
-                printf("Transformed: %lld %lld %lld %lld\n"
-                        "Root: %lld %lld %lld %lld\n",
-                        transformed[0], transformed[1],
-                        transformed[2], transformed[3],
-                        n->val[0],      n->val[1],
-                        n->val[2],      n->val[3]);
-            }
-#endif
-            if ( (n->val[i] < transformed[i]) 
-                 && (transformed[i] < ceiling))
-            {
-                memcpy(prime, n->val, 4*sizeof(number));
-                prime[i] = transformed[i];
-                nodeA *primeNode = nodeArrayInitWithArray(prime);
-#if DEBUGGING
-                primeNode->lvl = n->lvl + 1;
-#endif
-                llaPush(&ancestors, primeNode);
-                if (setSetItem(CURVELIST, transformed[i], 1) < 0)
-                {
-                    exit(1);
-                }
-            }
-        }
-
-        nodeArrayDestroy(n);
-        n = NULL;
-    }
-#if DEBUGGING
-    printf("%s\n", buf);
-#endif
-
-    return NULL;
-}
-
 /**
  * input:  root (the initial quadruple that defines the packing)
  *         limit (arbitrary limit we don't want to go above)
  * output: ancestors (list of quadruples all below the limit)
  */
-void fuchsian(number root[4]) {
-    unsigned char i = 0;
+void fuchsian(number root[4]) 
+{
+    struct LinkedListArray ancestors;
+    memset(&ancestors, 0, sizeof(lla));
+
+    llaAppend(&ancestors, nodeArrayInitWithArray(root));
+    struct NodeArray *n = NULL;
+    unsigned char i;
+    // add root to CURVELIST
+    // this is necessary b/c of how the children are made
+    for (i = 0; i < 4; i++)
+    {
+        if (setAdd(CURVELIST, root[i]) < 0)
+        { exit(1); }
+    }
     number prime[4];
     number transformed[4];
 
-    transformed[0] = 
-            -3 * root[0] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[1] = 
-            -3 * root[1] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[2] = 
-            -3 * root[2] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[3] = 
-            -3 * root[3] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-
-    pthread_t fuchsianThreads[4];
-    memset(fuchsianThreads, 0, sizeof(pthread_t) * 4);
-    for (i = 0; i < 4; i++)
+    while (ancestors.len > 0)
     {
-#if DEBUGGING
-        printf("transformed[%d] = %d\n", i, (int)transformed[i]);
-        printf("root[%d]        = %d\n", i, (int)root[i]);
-#endif
-        if ( (root[i] < transformed[i]) 
-             && (transformed[i] < ceiling))
-        {
-            memcpy(prime, root, 4*sizeof(number));
-            prime[i] = transformed[i];
-            if (setSetItem(CURVELIST, transformed[i], 1) < 0)
-            {
-                exit(1);
-            }
-            number *copy;
-            // XXX: make sure copy is freed in fuchsianThreads!!!
-            copy = (number *)malloc(4 * sizeof(number));
-            memcpy(copy, prime, 4 * sizeof(number));
+        n = llaPop(&ancestors);
 
-            if (pthread_create(fuchsianThreads + i, 
-                               NULL, 
-                               fuchsianThread, 
-                               (void *)copy))
+        transformed[0] = -3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[1] = -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[2] = -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[3] = -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+
+        for (i = 0; i < 4; i++)
+        {
+            if ( (n->val[i] < transformed[i]) 
+                 && (transformed[i] < ceiling))
             {
-                printf("Error creating fuchsian thread\n");
-                exit(1);
-            }
-            else {
-                printf("Created thread %d\n", i);
-                fflush(stdout);
+                memcpy(prime, n->val, 4*sizeof(number));
+                prime[i] = transformed[i];
+                llaPush(&ancestors, nodeArrayInitWithArray(prime));
+                if (setSetItem(CURVELIST, transformed[i], 1) < 0)
+                { exit(1); }
             }
         }
+        nodeArrayDestroy(n);
+        n = NULL;
     }
 
-    for (i = 0; i < 4; i++)
+    unumber capacity = setGetCapacity(CURVELIST);
+    unumber index = 0;
+    for (index = 0; index < capacity; index++)
     {
-        int err = 0;
-        if ((fuchsianThreads[i] != 0) 
-            && (err = pthread_join((pthread_t)(fuchsianThreads[i]), NULL)))
-        {
-            printf("Error joining fuchsian thread #%d \n", i);
-            if (err == EDEADLK) { printf("EDEADLK\n"); }
-            else if (err == EINVAL) { printf("EINVAL\n"); }
-            else if (err == ESRCH) { printf("ESRCH\n"); }
-            exit(1);
-        }
-        else
-        {
-            printf("Joined thread %d\n", i);
-            fflush(stdout);
-        }
+        write(my_pipe[PIPE_W], &(CURVELIST->items[index]), sizeof(byte));
     }
-
-    setResetNumItems(CURVELIST);
 
     return;
 }
 
-set_t* valuesOf(struct LinkedListArray* quadList) {
-    set_t *possible = setInitWithRange(LOW, ceiling);
-    struct NodeArray *ruple = NULL;
-    for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
+void fuchsian_divide(number root[4])
+{
+    memset(ROOTS, 0, sizeof(ROOTS));
+    number transformed[4];
+    transformed[0] = -3 * root[0] + ((root[0] + root[1] + root[2] + root[3]) << 1);
+    transformed[1] = -3 * root[1] + ((root[0] + root[1] + root[2] + root[3]) << 1);
+    transformed[2] = -3 * root[2] + ((root[0] + root[1] + root[2] + root[3]) << 1);
+    transformed[3] = -3 * root[3] + ((root[0] + root[1] + root[2] + root[3]) << 1);
+
+    unsigned char i = 0;
+    for (i = 0; i < 4; i++)
     {
-        unsigned char i;
-        for (i = 0; i < 4; i++)
+        number prime[4];
+        memset(prime, 0, sizeof(prime[0]) * 4);
+        if ( (root[i] < transformed[i]) 
+                && (transformed[i] < ceiling))
         {
-            if (setAdd(possible, ruple->val[i]) < 0)
-            {
-                exit(1);
-            }
+            memcpy(prime, root, 4*sizeof(number));
+            prime[i] = transformed[i];
+            memcpy(ROOTS[num_roots], prime, sizeof(prime[0]) * 4);
+            ++num_roots;
         }
     }
-
-    return possible;
 }
+
 
 // Only returns solutions, not an updated orbit because orbit is actually 
 // modified in this function since it's a pointer
@@ -284,7 +193,6 @@ struct LinkedListArray* transformOrbit(
                 matched = 1;
                 break;
             }
-
         }
 
         // If family[i] was not in orbit, append it to orbit
@@ -330,26 +238,39 @@ struct LinkedListArray* genealogy(number seed[4]) {
 
 }
 
-set_t* path(set_t *valList) {
-
-    set_t *could = setInitWithRange(LOW, ceiling);
-
-    number i = 0;
-    for (i = 0; i < ceiling; i++)
+set_t* valuesOf(struct LinkedListArray* quadList) {
+    set_t *possible = setInitWithRange(0, 24);
+    struct NodeArray *ruple = NULL;
+    for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
     {
-        // Alert user if result of mod is negative (it shouldn't be)
-        if ((i % 24) < 0) { printf("mod in path was negative"); }
-        if (setExists(valList, (i % 24)))
+        unsigned char i;
+        for (i = 0; i < 4; i++)
         {
-            if (setAdd(could, i) < 0)
-            {
-                exit(1);
-            }
+            if (setAdd(possible, ruple->val[i]) < 0)
+            { exit(1); }
         }
     }
 
-    return could;
+    return possible;
+}
 
+ll* pathAndCompare(set_t *valList) {
+
+    ll *missing = (ll *)llaInit();
+    number i = 0;
+    number posI = 0;
+    for (i = LOW; i < ceiling; i++)
+    {
+        if ((i % 24) < 0) { posI = i + 24; }
+        else              { posI = i;      }
+        if (setExists(valList, (posI % 24)) && !setExists(CURVELIST, i))
+        {
+            node *n = (node *)nodeInitWithInt(i);
+            llAppend(missing, n);
+        }
+    }
+
+    return missing;
 }
 
 ll* compare(set_t *valuesGlobal) {
@@ -370,24 +291,93 @@ ll* compare(set_t *valuesGlobal) {
 
 }
 
-// TODO: use ceiling instead of cap
+void child_fuchsian(const unsigned char child)
+{
+    CURVELIST = setInitWithRange(LOW, ceiling);
+    my_pipe = children_fuchsian[child].pipes;
+    printf("I'm child %u\n", (unsigned int)child);
+    close(my_pipe[PIPE_R]);    // child is writing only
+    printf("Running fuchsian\n");
+    fflush(stdout);
+    fuchsian(ROOTS[my_root]);
+    printf("exiting child %u\n", (unsigned int)child);
+    fflush(stdout);
+    setDestroy(CURVELIST);
+    exit(0);
+}
+
+void receive_fuchsian_curvatures(const int max_pipe_num)
+{
+    byte aByte = 0;
+    unumber byte_num = 0;
+    int pipe_num = 0;
+    int ret_val;
+    while (pipe_num < max_pipe_num)
+    {
+        if (byte_num < CURVELIST->capacity)
+        {
+            ret_val = read(children_fuchsian[pipe_num].pipes[PIPE_R], 
+                           &aByte, 
+                           sizeof(aByte));
+        }
+        else
+        { ret_val = -1; }
+        if (ret_val != -1) 
+        { 
+            CURVELIST->items[byte_num] = CURVELIST->items[byte_num] | aByte;
+            ++byte_num;
+        }
+        else
+        { 
+            ++pipe_num; 
+            aByte = 0;
+            byte_num = 0;
+            printf("one child finished, waiting on it\n");
+            fflush(stdout);
+            int status;
+            waitpid(-1, &status, 0);
+        }
+    } // end while
+} // end receive_fuchsian_curvatures
+
 ll* seek(number root[4])
 {
 
-    number i = 0;
+    printf("In seek\n");
+
+
+    fuchsian_divide(root);
+    memset(children_fuchsian, 0, sizeof(children_fuchsian[0]) * 4);
+    unsigned char num_children = 0;
+    // make the children for fuchsian
+    for (num_children = 0; num_children < num_roots; num_children++)
+    {
+        pipe(&(children_fuchsian[num_children].pipes[0])); 
+        my_root = num_children; 
+        printf("making child %u...\n", (unsigned int)num_children);
+        fflush(stdout);
+        if ((children_fuchsian[num_children].pid = fork()) == -1)
+        {
+            fprintf(STDERROR, "error making fork\n");
+            exit(1);
+        }
+        else if (children_fuchsian[num_children].pid == 0)     
+        { child_fuchsian(num_children); } // child's start of execution
+        // parent is reading only
+        close(children_fuchsian[num_children].pipes[PIPE_W]);    
+    }
+
+    // Only parent gets past the for loop
+    // Receive fuchsian results from children and put them in CURVELIST
+    CURVELIST = setInitWithRange(LOW, ceiling);
+    unsigned char i = 0;
     for (i = 0; i < 4; i++)
     {
         if (setAdd(CURVELIST, root[i]) < 0)
-        {
-            exit(1);
-        }
+        { exit(1); }
     } 
+    receive_fuchsian_curvatures(num_children);
 
-    printf("In seek\n");
-
-    printf("Running fuchsian\n");
-    fflush(stdout);
-    fuchsian(root);
 #if DEBUGGING
     printf("CURVELIST capacity:  %d\n", (int)setGetCapacity(CURVELIST));
     printf("CURVELIST num_items: "NUMFORM"\n", setGetNumItems(CURVELIST));
@@ -399,6 +389,7 @@ ll* seek(number root[4])
     printf("Running genealogy\n");
     fflush(stdout);
     struct LinkedListArray *admissible = genealogy(root);
+    llaPrint(admissible);
 
     printTime();
     printf("Running valuesOf\n");
@@ -408,24 +399,20 @@ ll* seek(number root[4])
     llaDestroy(admissible);
 
     printTime();
-    printf("Running path\n");
+
+    printf("Running path and compare\n");
     fflush(stdout);
-    set_t *valuesGlobal = path(valuesOrbit);
+    ll *nope = pathAndCompare(valuesOrbit);
 
-    setDestroy(valuesOrbit);
-
-    printTime();
-    printf("Running compare\n");
-    fflush(stdout);
-    ll *nope = compare(valuesGlobal);
-
-    setDestroy(valuesGlobal);
     setDestroy(CURVELIST);
 
     return nope;
 }
 
 int main(int argc, char *argv[]) {
+    
+    time(&start_time);
+
 
     if (argc != 6)
     {
@@ -435,8 +422,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    time(&start_time);
-
     number root[4] = {0,0,0,0};
 
     unsigned char arg = 1;
@@ -444,27 +429,27 @@ int main(int argc, char *argv[]) {
     {
         root[arg-1] = (number)strtol(argv[arg], NULL, 10);
     }
+    ROOT = root;
 
     number index = 0;
-    LOW = root[0];
+    LOW = ROOT[0];
     for (index = 0; index < 4; index++)
     {
-        if (root[index] < LOW) { LOW = root[index]; }
+        if (ROOT[index] < LOW) { LOW = ROOT[index]; }
     }
 
     ceiling = (long long int)strtoll(argv[5], NULL, 10);
-    CURVELIST = setInitWithRange(LOW, ceiling);
 
     printf("==========\n");
     printf("Running seek with root {");
-    for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
+    for (index = 0; index < 4; index++) { printf(NUMFORM",",ROOT[index]); }
     printf("} and ceiling %lld\n", ceiling);
 
     printTime();
 
     fflush(stdout);
 
-    ll *results = seek(root);
+    ll *results = seek(ROOT);
     llPrint(results, 0);
 
     printTime();
