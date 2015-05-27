@@ -32,7 +32,7 @@ typedef struct child_process_s
  * Global Variables *
  ********************/
 
-// The main process runs transforms the root quadruple into
+// The main process transforms the root quadruple into
 // at least 4 quadruples to be processed by each child.
 number child_roots[4][4];
 unsigned char num_roots = 0;
@@ -101,15 +101,19 @@ void fuchsian(number root[4])
     }
     number prime[4];
     number transformed[4];
+    // rootSum is just a variable to make the assignment of transformed
+    // shorter. It'll be removed by the optimizer when compiled.
+    number rootSum;
 
     while (ancestors.len > 0)
     {
         n = llaPop(&ancestors);
-
-        transformed[0] = -3 * n->val[0] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[1] = -3 * n->val[1] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[2] = -3 * n->val[2] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
-        transformed[3] = -3 * n->val[3] + ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        
+        rootSum = ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[0] = -3 * n->val[0] + rootSum;
+        transformed[1] = -3 * n->val[1] + rootSum;
+        transformed[2] = -3 * n->val[2] + rootSum;
+        transformed[3] = -3 * n->val[3] + rootSum;
 
         for (i = 0; i < 4; i++)
         {
@@ -146,11 +150,13 @@ void fuchsian(number root[4])
 void fuchsian_divide(number root[4])
 {
     memset(child_roots, 0, sizeof(child_roots));
+
     number transformed[4];
-    transformed[0] = -3 * root[0] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[1] = -3 * root[1] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[2] = -3 * root[2] + ((root[0] + root[1] + root[2] + root[3]) << 1);
-    transformed[3] = -3 * root[3] + ((root[0] + root[1] + root[2] + root[3]) << 1);
+    number rootSum = ((root[0] + root[1] + root[2] + root[3]) << 1);
+    transformed[0] = -3 * root[0] + rootSum;
+    transformed[1] = -3 * root[1] + rootSum;
+    transformed[2] = -3 * root[2] + rootSum;
+    transformed[3] = -3 * root[3] + rootSum;
 
     unsigned char i = 0;
     for (i = 0; i < 4; i++)
@@ -233,7 +239,8 @@ struct LinkedListArray* transformOrbit(
 
 }
 
-struct LinkedListArray* genealogy(number seed[4]) {
+struct LinkedListArray* genealogy(number seed[4]) 
+{
     struct LinkedListArray *ancestors = llaInit();
     struct LinkedListArray *orbit = llaInit();
     number modSeed[4] = {0};
@@ -261,10 +268,10 @@ struct LinkedListArray* genealogy(number seed[4]) {
     llaDestroy(ancestors);
 
     return orbit;
-
 }
 
-set_t* valuesOf(struct LinkedListArray* quadList) {
+set_t* valuesOf(struct LinkedListArray* quadList) 
+{
     set_t *possible = setInitWithRange(0, 24);
     struct NodeArray *ruple = NULL;
     for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
@@ -280,8 +287,8 @@ set_t* valuesOf(struct LinkedListArray* quadList) {
     return possible;
 }
 
-ll* pathAndCompare(set_t *valList) {
-
+ll* pathAndCompare(set_t *valList) 
+{
     ll *missing = (ll *)llaInit();
     number i = 0;
     number posI = 0;
@@ -289,7 +296,8 @@ ll* pathAndCompare(set_t *valList) {
     {
         if ((i % 24) < 0) { posI = i + 24; }
         else              { posI = i;      }
-        if (setExists(valList, (posI % 24)) && !setExists(CURVELIST, i))
+        if (setExists(valList, (posI % 24)) 
+            && !setExists(CURVELIST, i))
         {
             node *n = (node *)nodeInitWithInt(i);
             llAppend(missing, n);
@@ -445,7 +453,6 @@ ll* seek(number root[4])
     printf("Running genealogy\n");
     fflush(stdout);
     struct LinkedListArray *admissible = genealogy(root);
-    llaPrint(admissible);
 
     printTime();
     printf("Running valuesOf\n");
