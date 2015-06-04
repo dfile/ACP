@@ -72,8 +72,6 @@ void nodeDestroy(struct Node *node)
 {
     if (node == NULL) { return; }
     //printf("destroy Node struct\n");
-    //free(node->prev);
-    //free(node->next);
     free(node);
 }
 

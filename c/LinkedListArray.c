@@ -37,8 +37,6 @@ void llaDestroy(struct LinkedListArray *lla)
             temp = NULL;
         }
     }
-    //free(lla->header);
-    //free(lla->tail);
     //printf("Destroy LinkedListArray struct\n");
     free(lla);
 }
@@ -82,9 +80,6 @@ void nodeArrayDestroy(struct NodeArray *node)
 {
     if (node == NULL) { return; }
     //printf("destroy NodeArray struct\n");
-    //free(node->val);
-    //free(node->prev);
-    //free(node->next);
     free(node);
 }
 
