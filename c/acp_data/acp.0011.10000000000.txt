@@ -1,8 +1,0 @@
-Running seek with root {-3,5,8,8,} and ceiling 2147483647
-Time: Sat Apr 18 17:59:04 2015
-
-In seek
-Running fuchsian
-214748364th iteration: 6965109 2783590461 3274198008 3976281072
-429496728th iteration: 3245369037 215097429 1779719676 3477735708
-./run: line 4: 26425 Terminated              ./acp.bin $1 $2 $3 $4 $5

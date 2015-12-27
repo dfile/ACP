@@ -1,23 +1,44 @@
-nohup: ignoring input
-Running seek with root {-3,5,5,8,} and ceiling 1000
-Time: Tue Apr  7 10:47:08 2015
+==========
+Running seek with root {-3,5,8,8,} and ceiling 1000
+Time: Fri Dec 25 00:06:22 2015
 
 In seek
+making child 0...
+making child 1...
+making child 2...
+I'm child 0
 Running fuchsian
-CURVELIST num_items: 230
-Time: Tue Apr  7 10:47:08 2015
+making child 3...
+I'm child 1
+Running fuchsian
+exiting child 0
+I'm child 2
+Running fuchsian
+one child finished, waiting on it
+exiting child 1
+I'm child 3
+Running fuchsian
+exiting child 2
+one child finished, waiting on it
+exiting child 3
+one child finished, waiting on it
+one child finished, waiting on it
+Time: Fri Dec 25 00:06:22 2015
 
 Running genealogy
-Time: Tue Apr  7 10:47:08 2015
+Time: Fri Dec 25 00:06:22 2015
 
 Running valuesOf
-Time: Tue Apr  7 10:47:08 2015
+Time: Fri Dec 25 00:06:22 2015
 
-Running path
-Time: Tue Apr  7 10:47:08 2015
+Running testOrbit
+testOrbit results: pass
+Time: Fri Dec 25 00:06:22 2015
 
-Running compare
+Running path and compare
 
- Length=438 [ (0 NS) (2 SS) (3 SS) (6 SS) (9 SS) (11 SS) (12 SS) (14 SS) (17 SS) (18 SS) (20 SS) (21 SS) (23 SS) (24 SS) (27 SS) (29 SS) (30 SS) (32 SS) (33 SS) (36 SS) (38 SS) (42 SS) (44 SS) (45 SS) (47 SS) (48 SS) (50 SS) (51 SS) (53 SS) (54 SS) (56 SS) (57 SS) (62 SS) (63 SS) (66 SS) (68 SS) (69 SS) (72 SS) (74 SS) (75 SS) (77 SS) (78 SS) (80 SS) (81 SS) (84 SS) (87 SS) (89 SS) (92 SS) (93 SS) (96 SS) (98 SS) (101 SS) (102 SS) (104 SS) (107 SS) (108 SS) (111 SS) (113 SS) (114 SS) (116 SS) (117 SS) (120 SS) (122 SS) (125 SS) (126 SS) (128 SS) (131 SS) (132 SS) (134 SS) (135 SS) (137 SS) (138 SS) (143 SS) (144 SS) (146 SS) (149 SS) (152 SS) (153 SS) (156 SS) (158 SS) (162 SS) (164 SS) (165 SS) (167 SS) (168 SS) (170 SS) (171 SS) (174 SS) (177 SS) (179 SS) (180 SS) (182 SS) (183 SS) (188 SS) (189 SS) (192 SS) (194 SS) (195 SS) (197 SS) (198 SS) (200 SS) (201 SS) (203 SS) (206 SS) (207 SS) (209 SS) (210 SS) (212 SS) (213 SS) (216 SS) (218 SS) (222 SS) (224 SS) (228 SS) (230 SS) (231 SS) (234 SS) (236 SS) (239 SS) (240 SS) (242 SS) (243 SS) (245 SS) (246 SS) (248 SS) (254 SS) (255 SS) (257 SS) (261 SS) (264 SS) (266 SS) (269 SS) (270 SS) (272 SS) (273 SS) (276 SS) (279 SS) (282 SS) (284 SS) (288 SS) (290 SS) (291 SS) (293 SS) (294 SS) (300 SS) (302 SS) (303 SS) (306 SS) (308 SS) (311 SS) (312 SS) (314 SS) (317 SS) (318 SS) (320 SS) (323 SS) (324 SS) (327 SS) (329 SS) (332 SS) (333 SS) (335 SS) (336 SS) (338 SS) (339 SS) (341 SS) (342 SS) (344 SS) (345 SS) (348 SS) (351 SS) (354 SS) (357 SS) (362 SS) (366 SS) (368 SS) (369 SS) (372 SS) (374 SS) (377 SS) (380 SS) (381 SS) (384 SS) (386 SS) (389 SS) (390 SS) (392 SS) (393 SS) (395 SS) (396 SS) (402 SS) (404 SS) (405 SS) (407 SS) (408 SS) (410 SS) (414 SS) (416 SS) (417 SS) (419 SS) (422 SS) (426 SS) (428 SS) (429 SS) (431 SS) (432 SS) (434 SS) (438 SS) (440 SS) (444 SS) (446 SS) (447 SS) (449 SS) (450 SS) (453 SS) (464 SS) (467 SS) (468 SS) (471 SS) (474 SS) (476 SS) (477 SS) (479 SS) (480 SS) (482 SS) (483 SS) (485 SS) (486 SS) (488 SS) (489 SS) (492 SS) (498 SS) (500 SS) (501 SS) (503 SS) (504 SS) (509 SS) (510 SS) (512 SS) (513 SS) (516 SS) (518 SS) (522 SS) (525 SS) (528 SS) (531 SS) (534 SS) (536 SS) (537 SS) (540 SS) (546 SS) (548 SS) (551 SS) (552 SS) (554 SS) (557 SS) (558 SS) (560 SS) (561 SS) (563 SS) (566 SS) (567 SS) (572 SS) (576 SS) (578 SS) (582 SS) (584 SS) (588 SS) (590 SS) (591 SS) (594 SS) (596 SS) (597 SS) (602 SS) (603 SS) (605 SS) (606 SS) (608 SS) (609 SS) (611 SS) (612 SS) (614 SS) (615 SS) (617 SS) (618 SS) (621 SS) (624 SS) (626 SS) (629 SS) (632 SS) (635 SS) (636 SS) (638 SS) (639 SS) (642 SS) (644 SS) (651 SS) (653 SS) (654 SS) (657 SS) (659 SS) (660 SS) (662 SS) (666 SS) (668 SS) (672 SS) (674 SS) (675 SS) (678 SS) (680 SS) (684 SS) (686 SS) (689 SS) (690 SS) (692 SS) (693 SS) (695 SS) (696 SS) (698 SS) (699 SS) (702 SS) (704 SS) (705 SS) (708 SS) (713 SS) (720 SS) (722 SS) (723 SS) (729 SS) (731 SS) (732 SS) (734 SS) (738 SS) (740 SS) (741 SS) (743 SS) (744 SS) (747 SS) (750 SS) (752 SS) (753 SS) (756 SS) (762 SS) (764 SS) (765 SS) (767 SS) (768 SS) (770 SS) (773 SS) (774 SS) (776 SS) (780 SS) (782 SS) (783 SS) (786 SS) (788 SS) (792 SS) (794 SS) (797 SS) (806 SS) (807 SS) (809 SS) (810 SS) (812 SS) (813 SS) (815 SS) (818 SS) (819 SS) (822 SS) (824 SS) (828 SS) (830 SS) (834 SS) (836 SS) (840 SS) (843 SS) (846 SS) (848 SS) (851 SS) (852 SS) (854 SS) (855 SS) (858 SS) (861 SS) (863 SS) (866 SS) (867 SS) (872 SS) (876 SS) (878 SS) (882 SS) (885 SS) (888 SS) (890 SS) (891 SS) (894 SS) (897 SS) (899 SS) (902 SS) (903 SS) (906 SS) (909 SS) (912 SS) (917 SS) (920 SS) (921 SS) (924 SS) (926 SS) (927 SS) (930 SS) (932 SS) (936 SS) (938 SS) (939 SS) (941 SS) (944 SS) (948 SS) (954 SS) (957 SS) (960 SS) (962 SS) (963 SS) (968 SS) (969 SS) (972 SS) (974 SS) (977 SS) (978 SS) (980 SS) (981 SS) (984 SS) (987 SS) (990 SS) (992 SS) (993 SS) (996 SS) (998 SS) (999 SN) NULL ]
-Time: Tue Apr  7 10:47:08 2015
+ Length=47 [0, 24, 36, 60, 69, 72, 80, 84, 96, 144, 164, 180, 212, 216, 240, 248, 300, 324, 344, 360, 384, 408, 416, 429, 432, 440, 444, 468, 476, 500, 504, 516, 564, 576, 600, 636, 696, 732, 740, 840, 864, 885, 888, 896, 900, 936, 996]
+Time: Fri Dec 25 00:06:22 2015
 
+run time: 0.000000
+==========
