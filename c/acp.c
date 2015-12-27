@@ -1,407 +1,570 @@
-// C version of perhaps code
+// C version of acp code
 
+/********************
+ * Includes         *
+ ********************/
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <pthread.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <limits.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include "typedefs.h"
 #include "LinkedListArray.h"
 #include "LinkedList.h"
-#include "hashsetint.h"
+#include "set_t.h"
+#include "child_process_t.h"
 
-// input: quad (a quadruple of curvatures)
-// output: solutions (list of transformed quadruples)
-// function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
-struct LinkedListArray* transform(int quad[4]) {
-	// TODO: We should combine transform and check
-    struct LinkedListArray *solutions = llaInit();
-    int a = quad[0];
-    int b = quad[1];
-    int c = quad[2];
-    int d = quad[3];
-    struct NodeArray *soln = NULL;
-    if ((-a + (2 * (b + c + d))) > a) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){(-a + (2 * (b + c + d))), b, c, d}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-b + (2 * (a + c + d))) > b) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-               ((int [4]){a, (-b + (2 * (a + c + d))), c, d}),
-               (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-c + (2 * (a + b + d))) > c) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, (-c + (2 * (a + b + d))), d}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
-    if ((-d + (2 * (a + b + c))) > d) {
-        soln = nodeArrayInit();
-        memcpy((soln->val), 
-                ((int [4]){a, b, c, (-d + (2 * (a + b + c)))}),
-                (4*sizeof(int)));
-        llaAppend(solutions, soln);
-    }
+/********************
+ * Global Variables *
+ ********************/
 
-    return solutions;
-}
+// The main process transforms the root quadruple into
+// at least 4 quadruples to be processed by each child.
+number child_roots[4][4];
+uint_fast8_t num_roots = 0;
+uint_fast8_t child_root;   // for use by child
 
-/**
- * input:  quadList (a list of quadruples)
- *         ceiling (the arbitrary limit we don't want to go above)
- * output: validQuads (list of quadruples where every curv is below the ceiling)
+// children
+child_process_t children[4];
+
+/********************
+ * Functions        *
+ ********************/
+
+/*
+ * Convenience function to print the time.
  */
-struct LinkedListArray* check(struct LinkedListArray *quadList, int ceiling) {
-
-    struct LinkedListArray *validQuads = llaInit();
-    struct NodeArray *validQuad = NULL;
-    struct NodeArray *quadrupleNode = NULL;
-    int entry;
-    int quadruple[4];
-    bool valid = true;
-
-    for (quadrupleNode = quadList->header; quadrupleNode != NULL; quadrupleNode = quadrupleNode->next)
-    {
-        valid = true;
-
-        // Copy array in quadrupleNode to quadruple
-        memcpy(quadruple, 
-                quadrupleNode->val,
-                4*sizeof(int));
-        for (entry = 0; entry < 4; entry++)
-        {
-            if (quadruple[entry] >=ceiling)
-            {
-                valid = false;
-            }
-        }
-        if (valid) {
-            validQuad = nodeArrayInit();
-
-            // Copy quadruple array to validQuad node
-            memcpy(validQuad->val, 
-                    quadruple,
-                    4*sizeof(int));
-            llaAppend(validQuads, validQuad);
-        }
-    }
-
-    return validQuads;
+void printTime()
+{
+    static time_t t = 0;
+    static char *timestamp = NULL;
+    time(&t);
+    timestamp = ctime(&t);
+    printf("Time: %s\n", timestamp);
 }
 
 /**
+ * fuchsian transforms a root quadruple and its descendants up
+ * to a previously defined ceiling, where ceiling is the size
+ * of the largest desired curvature. The curvatures are saved
+ * in curveList.
+ *
  * input:  root (the initial quadruple that defines the packing)
- *         limit (arbitrary limit we don't want to go above)
- * output: ancestors (list of quadruples all below the limit)
+ *         curveList (a list of curvatures for fuchsian to populate)
+ *         CEILING (arbitrary limit we don't want to go above)
+ *         
  */
-struct LinkedListArray* fuchsian(int root[4], int limit) {
+void fuchsian(number root[4], set_t *curveList, const number CEILING) 
+{
+    struct LinkedListArray ancestors;
+    memset(&ancestors, 0, sizeof(lla));
 
-    struct LinkedListArray *ancestors = llaInit();
-    struct NodeArray *rootNode = nodeArrayInit();
-    memcpy(rootNode->val,
-            root,
-            4*sizeof(int));
-    llaAppend(ancestors, rootNode);
-
-    struct NodeArray *parent = NULL;
-    struct NodeArray *child = NULL;
-    for (parent = ancestors->header; parent != NULL; parent = parent->next)
+    llaAppend(&ancestors, nodeArrayInitWithArray(root));
+    struct NodeArray *n = NULL;
+    uint_fast8_t i;
+    // add root to curveList
+    // this is necessary b/c of how the children are made
+    for (i = 0; i < 4; i++)
     {
-        int parentArray[4];
-        memcpy(parentArray,
-                parent->val,
-                4*sizeof(int));
-		// TODO: We need to remove parentArray from *ancestors after we transform(*ancestors)
-        struct LinkedListArray *nextGen = transform(parentArray); // TODO: We can combine transfrom and check
-        struct LinkedListArray *validGen = check(nextGen, limit);
-        for (child = validGen->header; child != NULL; child = child->next)
-        {
-            struct NodeArray *childCopy = nodeArrayInit();
-            memcpy(childCopy->val,
-                    child->val,
-                    sizeof(child->val));
-            llaAppend(ancestors, childCopy);
-        }
-        free(nextGen);
-        free(validGen);
+        if (setAdd(curveList, root[i]) < 0)
+        { exit(1); }
     }
+    number prime[4];
+    number transformed[4];
+    // rootSum is just a variable to make the assignment of transformed
+    // shorter. It'll be removed by the optimizer when compiled.
+    number rootSum;
 
-    return ancestors;
-}
-
-struct LinkedList* valuesOf(struct LinkedListArray* quadList) {
-
-    struct NodeArray *ruple = NULL;
-    hashset_t maybe = hashset_create();
-    struct LinkedList* actual = llInit();
-    int i;
-    for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
+    while (ancestors.len > 0)
     {
+        n = llaPop(&ancestors);
+        
+        rootSum = ((n->val[0] + n->val[1] + n->val[2] + n->val[3]) << 1);
+        transformed[0] = -3 * n->val[0] + rootSum;
+        transformed[1] = -3 * n->val[1] + rootSum;
+        transformed[2] = -3 * n->val[2] + rootSum;
+        transformed[3] = -3 * n->val[3] + rootSum;
+
         for (i = 0; i < 4; i++)
         {
-            int exists = hashset_add(maybe, (ruple->val[i]));
-            if (exists == 1)
+            if ( (n->val[i] < transformed[i]) 
+                 && (transformed[i] < CEILING))
             {
-                struct Node *node = nodeInit();
-                node->val = ruple->val[i];
-                llAppend(actual, node);
+                memcpy(prime, n->val, 4*sizeof(number));
+                prime[i] = transformed[i];
+                llaPush(&ancestors, nodeArrayInitWithArray(prime));
+                if (setSetItem(curveList, transformed[i], 1) < 0)
+                { exit(1); }
             }
         }
+        nodeArrayDestroy(n);
+        n = NULL;
     }
 
-    return actual;
+    return;
 }
 
-// Only returns solutions, not an updated orbit because orbit is actually modified in this function since it's a pointer
-struct LinkedListArray* transformOrbit(int quad[4], struct LinkedListArray* orbit) {
-    
-    //printf(">>transformOrbit<<\n\n");
+/**
+ * fuchsian_divide takes a root quadruple and transforms it
+ * once to get at least 4 unique quadruples. The quads are
+ * saved in child_roots.
+ * input: a root quadruple of numbers
+ */
+void fuchsian_divide(number root[4], const number CEILING)
+{
+    memset(child_roots, 0, sizeof(child_roots));
+
+    number transformed[4];
+    number rootSum = ((root[0] + root[1] + root[2] + root[3]) << 1);
+    transformed[0] = -3 * root[0] + rootSum;
+    transformed[1] = -3 * root[1] + rootSum;
+    transformed[2] = -3 * root[2] + rootSum;
+    transformed[3] = -3 * root[3] + rootSum;
+
+    uint_fast8_t i = 0;
+    for (i = 0; i < 4; i++)
+    {
+        number prime[4];
+        memset(prime, 0, sizeof(prime[0]) * 4);
+        if ( (root[i] < transformed[i]) 
+                && (transformed[i] < CEILING))
+        {
+            memcpy(prime, root, 4*sizeof(number));
+            prime[i] = transformed[i];
+            memcpy(child_roots[num_roots], prime, sizeof(prime[0]) * 4);
+            ++num_roots;
+        }
+    }
+}
+
+// Only returns solutions, not an updated orbit because orbit is actually 
+// modified in this function since it's a pointer
+struct LinkedListArray* transformOrbit(
+    number quad[4], 
+    struct LinkedListArray* orbit 
+){
     struct LinkedListArray *solutions = llaInit();
-    int a = quad[0];
-    int b = quad[1];
-    int c = quad[2];
-    int d = quad[3];
-    int family[4][4];
-    unsigned int i;
-    struct NodeArray *ptr = NULL;
-    int match = 1;
+    number family[4][4];
+    number a = quad[0], b = quad[1], c = quad[2], d = quad[3];
 
-    int aPos = (-a + (2 * (b + c + d))) % 24;
-    int bPos = (-b + (2 * (a + c + d))) % 24;
-    int cPos = (-c + (2 * (a + b + d))) % 24;
-    int dPos = (-d + (2 * (a + b + c))) % 24;
+    number aPos = (-a + (2 * (b + c + d))) % 24;
+    number bPos = (-b + (2 * (a + c + d))) % 24;
+    number cPos = (-c + (2 * (a + b + d))) % 24;
+    number dPos = (-d + (2 * (a + b + c))) % 24;
 
+    // This ensures that the results from mod 24 above are positive
     aPos = aPos < 0 ? aPos + 24 : aPos;
     bPos = bPos < 0 ? bPos + 24 : bPos;
     cPos = cPos < 0 ? cPos + 24 : cPos;
     dPos = dPos < 0 ? dPos + 24 : dPos;
 
     // the four matrices
-    int aPrime[4] = {aPos, c % 24, b % 24, d % 24};
-    int bPrime[4] = {a % 24, bPos, c % 24, d % 24};
-    int cPrime[4] = {a % 24, b % 24, cPos, d % 24};
-    int dPrime[4] = {a % 24, b % 24, c % 24, dPos};
+    memcpy(family[0], 
+           ((number [4]){aPos,   b % 24, c % 24, d % 24}), 4*sizeof(number));
+    memcpy(family[1], 
+           ((number [4]){a % 24, bPos,   c % 24, d % 24}), 4*sizeof(number));
+    memcpy(family[2], 
+           ((number [4]){a % 24, b % 24, cPos,   d % 24}), 4*sizeof(number));
+    memcpy(family[3], 
+           ((number [4]){a % 24, b % 24, c % 24, dPos  }), 4*sizeof(number));
 
-
-
-    memcpy(family[0],
-            aPrime,
-            sizeof(aPrime));
-    memcpy(family[1],
-            bPrime,
-            sizeof(bPrime));
-    memcpy(family[2],
-            cPrime,
-            sizeof(cPrime));
-    memcpy(family[3],
-            dPrime,
-            sizeof(dPrime));
-
+    uint8_t i;
+    struct NodeArray *ptr = NULL;
+    unsigned int matched = 0;
+    int match = 1;
     for (i = 0; i < 4; i++)
     {
+        ptr = NULL;
+        matched = 0;
+        match = 1;
         for (ptr = orbit->header; ptr != NULL; ptr = ptr->next)
         {
-            // If memcmp finds family[i] in orbit, match will be 0, so
-            // multiplying by 0 will always give 0, and match will end
-            // up as 0.
-            // int j = 0;
-            //printf("Comparing ["); for (j = 0; j < 4; j++) { printf("%d,", family[i][j]); } printf("] ");
-            //printf("against "); nodeArrayPrint(ptr);
-
-            match = match * memcmp(family[i], ptr->val, 4*sizeof(int));
-
-            //printf(" %d\n", match);
-        }
-        // If family[i] was not in orbit, append it to orbit
-        if (match != 0)
-        {
-            //printf("Appending array to orbit\n");
-            struct NodeArray *kid = nodeArrayInit();
-            memcpy(kid->val,
-                    family[i],
-                    sizeof(family[i])); 
-            llaAppend(orbit, kid);
-
-            struct NodeArray *kid1 = nodeArrayInit();
-            memcpy(kid1,
-                    kid,
-                    sizeof(struct NodeArray));
-            kid1->next = NULL;
-            kid1->prev = NULL;
-
-            llaAppend(solutions, kid1);
-        }
-        /*
-        else
-        {
-            int j = 0;
-            //printf("This array: [");
-            for (j = 0; j < 4; j++)
+            // If memcmp finds family[i] in orbit, match will be 0
+            match = memcmp(family[i], ptr->val, 4*sizeof(number));
+            
+            if (match == 0)
             {
-                //printf("%d,", family[i][j]);
+                matched = 1;
+                break;
             }
-            //printf("] ");
-            //printf(" matched one or more array in orbit.");
-            //llaPrint(orbit);
         }
-        */
-        match = 1;
+
+        // If family[i] was not in orbit, append it to orbit
+        if (matched == 0)
+        {
+            llaAppend(orbit, nodeArrayInitWithArray(family[i]));
+            llaAppend(solutions, nodeArrayInitWithArray(family[i]));
+        }
     }
 
-    //printf(">>End transformOrbit<<\n\n");
     return solutions;
 
 }
 
-struct LinkedListArray* genealogy(int seed[4]) {
-
+struct LinkedListArray* genealogy(number seed[4]) 
+{
     struct LinkedListArray *ancestors = llaInit();
     struct LinkedListArray *orbit = llaInit();
-    int modSeed[4] = {0};
-    unsigned int i;
-    struct NodeArray *parent = NULL;
-    struct NodeArray *offspring = NULL;
+    number modSeed[4] = {0};
 
+    uint8_t i;
     for (i = 0; i < 4; i++)
     {
-        //printf("seed[i] = %d\n", seed[i]);
         if ((modSeed[i] = (seed[i] % 24)) < 0)
         {
             modSeed[i] = modSeed[i] + 24;
         }
-        //printf("modSeed[i] = %d\n", modSeed[i]);
-
     }
 
-    struct NodeArray *modSeedNode = nodeArrayInit();
-    memcpy(modSeedNode->val,
-            modSeed,
-            sizeof(modSeed));
-    llaAppend(ancestors, modSeedNode);
-
-    struct NodeArray *modSeedNode1 = nodeArrayInit();
-    memcpy(modSeedNode1,
-            modSeedNode,
-            sizeof(struct NodeArray));
-    //printf("original orbit pre:  ");    llaPrint(orbit); 
-    llaAppend(orbit, modSeedNode);
-    //printf("original orbit post: ");    llaPrint(orbit);
-    //int cnt = 0;
+    llaAppend(ancestors, nodeArrayInitWithArray(modSeed));
+    llaAppend(orbit, nodeArrayInitWithArray(modSeed));
+    struct LinkedListArray *newGeneration = NULL;
+    struct NodeArray *parent = NULL;
     for (parent = ancestors->header; parent != NULL; parent = parent->next)
     {
-        //printf("%d: orbit pre:  ", cnt);  llaPrint(orbit);
-        struct LinkedListArray *newGeneration = transformOrbit(parent->val, orbit);
-        //printf("%d: orbit post: ", cnt);  llaPrint(orbit);
-        //if (++cnt < 3) { printf("Exiting\n"); break; }
-        //printf("newGeneration: ");  llaPrint(newGeneration);
-        for (offspring = newGeneration->header; offspring != NULL; offspring = offspring->next)
+        newGeneration = transformOrbit(parent->val, orbit);
+        llaExtend(ancestors, newGeneration);
+        free(newGeneration);
+        newGeneration = NULL;
+    }
+    llaDestroy(ancestors);
+
+    return orbit;
+}
+
+set_t* valuesOf(struct LinkedListArray* quadList) 
+{
+    set_t *possible = setInitWithRange(0, 24);
+    struct NodeArray *ruple = NULL;
+    for (ruple = quadList->header; ruple != NULL; ruple = ruple->next)
+    {
+        uint8_t i;
+        for (i = 0; i < 4; i++)
         {
-            struct NodeArray *offspringCopy = nodeArrayInit();
-            memcpy(offspringCopy,
-                    offspring,
-                    sizeof(struct NodeArray));
-            llaAppend(ancestors, offspringCopy);
+            if (setAdd(possible, ruple->val[i]) < 0)
+            { exit(1); }
         }
     }
 
-    return orbit;
-
+    return possible;
 }
 
-struct LinkedList* path(struct LinkedList *valList, int top) {
-
-    struct LinkedList *could = llInit();
-    int i = 0;
-    struct Node *poss = NULL;
-
-    for (i = 0; i < top; i++)
+/**
+ * testOrbit tests that the curvatures in curveList are
+ * indeed congruent to the numbers in orbit modulo 24.
+ * Returns 1 if they are, 0 if at least one isn't.
+ */
+int testOrbit(
+    set_t *orbit, 
+    set_t *curveList, 
+    const number LOW, 
+    const number CEILING
+){
+    int isInOrbit = 1;
+    int i = LOW;
+    int modI = 0;
+    for (i = LOW; i <= CEILING; i++)
     {
-        for (poss = valList->header; poss != NULL; poss = poss->next)
+        if (setExists(curveList, i))
         {
-            //printf("Comparing %d (%d) and %d\n", i, i % 24, poss->val);
-            if ((i % 24) == poss->val)
+            if ((i % 24) < 0) { modI = (i % 24) + 24; }
+            else              { modI = i % 24; }
+            if (!setExists(orbit, modI))
             {
-                //printf("added\n");
-                struct Node *possCopy = nodeInit();
-                possCopy->val = i;
-                llAppend(could, possCopy);
-                //hashset_add(could, i);
-                break;
+                isInOrbit = 0;
             }
         }
     }
-
-    return could;
-
+    return isInOrbit;
 }
 
-struct LinkedList* compare(struct LinkedList *valsPack, struct LinkedList *valsOrb, int limit) {
-
-    struct LinkedList *missing = llInit();
-    //printf("About to call path. valsOrb: ");
-    llPrint(valsOrb);
-    struct LinkedList *should = path(valsOrb, limit);
-    //printf("Path results: "); llPrint(should);
-    hashset_t valsPackSet = hashset_create();
-    struct Node *might = NULL;
-    struct Node *ptr = NULL;
-
-    for (ptr = valsPack->header; ptr != NULL; ptr = ptr->next)
+ll* pathAndCompare(
+    set_t *valList, 
+    set_t *curveList, 
+    const number LOW,
+    const number CEILING
+){
+    ll *missing = (ll *)llaInit();
+    number i = 0;
+    number posI = 0;
+    for (i = LOW; i < CEILING; i++)
     {
-        hashset_add(valsPackSet, (ptr->val));
-    }
-
-    for (might = should->header; might != NULL; might = might->next)
-    {
-        if (hashset_is_member(valsPackSet, (might->val)) == 0)
+        if ((i % 24) < 0) { posI = i + 24; }
+        else              { posI = i;      }
+        if (setExists(valList, (posI % 24)) 
+            && !setExists(curveList, i))
         {
-            struct Node *node = nodeInit();
-            node->val = might->val;
-            llAppend(missing, node);
+            node *n = (node *)nodeInitWithInt(i);
+            llAppend(missing, n);
         }
     }
 
     return missing;
-
 }
 
-struct LinkedList* seek(int root[4], int cap)
+/**
+ * child_fuchsian is run by child processes on a "branch" of 
+ * a root quadruple. The function runs fuchsian on the quad
+ * and saves them in curveList. When finished, the child
+ * sends the bytes of curveList over the pipe to the main
+ * process.
+ *
+ * input: uint8_t representing the index of this child
+ *        in the children array
+ */
+void child_fuchsian(
+    const uint8_t child, 
+    const number LOW,
+    const number CEILING)
+{
+    // create curveList here. n.b. this isn't created in
+    // the parent because fork can't handle large
+    // allocations of memory (~1GB)
+    set_t *curveList = setInitWithRange(LOW, CEILING);
+    // get a convenient pointer to the child's pipe
+    int *child_pipe = children[child].pipes;
+    printf("I'm child %u\n", (unsigned int)child);
+    close(child_pipe[PIPE_R]);    // child is writing only
+    printf("Running fuchsian\n");
+    fflush(stdout);
+    // Run fuchsian on the root given to it by the main process
+    fuchsian(child_roots[child_root], curveList, CEILING);
+    // Send curveList to parent process
+    unumber capacity = setGetCapacity(curveList);
+    unumber index = 0;
+    for (index = 0; index < capacity; index++)
+    {
+        write(child_pipe[PIPE_W], &(curveList->items[index]), sizeof(set_t_unit));
+    }
+    printf("exiting child %u\n", (unsigned int)child);
+    fflush(stdout);
+    // destroy curveList
+    setDestroy(curveList);
+    // exit successfully
+    exit(0);
+}
+
+/**
+ * receive_fuchsian_curvatures allows the main process to receive
+ * curvatures over a pipe from the child processes and put them
+ * in curveList.
+ * 
+ * input: number of existing pipes (corresponds to number of children)
+ */
+void receive_fuchsian_curvatures(const int max_pipe_num, set_t *curveList)
+{
+    set_t_unit someBits = 0;    // received bits go here temporarily
+    unumber set_t_unit_num = 0; // number of received set_t_units
+    int pipe_num = 0;           // pipe currently reading from
+    int ret_val;                // holds return values from read
+    // read from one child's pipe until it finishes, then move on to
+    // the next child
+    while (pipe_num < max_pipe_num)
+    {
+        // check if we've received all the bits
+        if (set_t_unit_num < curveList->capacity)
+        {
+            // get a bit from the pipe
+            ret_val = read(children[pipe_num].pipes[PIPE_R], 
+                           &someBits, 
+                           sizeof(someBits));
+        }
+        // we've received all the pipes, move on to the next one
+        else
+        { ret_val = -2; }
+        // check ret_val for errors or end of reading
+        if (ret_val >= 0) 
+        { 
+            // not end of reading, add the bits to curveList.
+            // this is being done manually to increase performance
+            curveList->items[set_t_unit_num] = curveList->items[set_t_unit_num] | someBits;
+            ++set_t_unit_num;
+        }
+        //FIXME: this code assumes -1 is end of reading and ignores errors
+        else
+        { 
+            // end of reading, go to next pipe and wait for child to terminate
+            ++pipe_num;         // go to next pipe
+            someBits = 0;       // reset variables
+            set_t_unit_num = 0; // reset variables
+            printf("one child finished, waiting on it\n");
+            fflush(stdout);
+            int status;     // hold return value of wait, not currently used
+            waitpid(-1, &status, 0);    // wait for child to terminate
+        }
+    } // end while
+} // end receive_fuchsian_curvatures
+
+/**
+ * Seek finds the missing curvatures in the packing generated by the
+ * root quadruple.
+ * 
+ * input: a root quadruple (array of 4 numbers)
+ * output: list of missing curvatures
+ */
+ll* seek(number root[4], const number LOW, const number CEILING)
 {
 
-    //printf("In seek\n");
-    struct LinkedListArray *small = fuchsian(root, cap);
-    //printf("  fuchsian results - matches with acp python code \n");
-    //llaPrint(small);
-    struct LinkedList *valuesPack = valuesOf(small);
-    //printf("  valuesOf results from fuchsian - matches with acp python code \n");
-    //llPrint(valuesPack);
-    struct LinkedListArray *admissible = genealogy(root);
-    //printf("  genealogy results - matches with acp python code\n");
-    //llaPrint(admissible);
-    struct LinkedList *valuesOrbit = valuesOf(admissible);
-    //printf("  valuesOf results from genealogy - mathces with acp python code\n");
-    //llPrint(valuesOrbit);
-    struct LinkedList *gone = compare(valuesPack, valuesOrbit, cap);
+    printf("In seek\n");
 
-    return gone;
+    // transform root into at least 4 roots for children
+    fuchsian_divide(root, CEILING);
+    memset(children, 0, sizeof(children[0]) * 4);
+    uint_fast8_t num_children = 0;
+    // make the children for fuchsian
+    for (num_children = 0; num_children < num_roots; num_children++)
+    {
+        // make pipe to child
+        pipe(&(children[num_children].pipes[0])); 
+        // set child's number for child's reference
+        child_root = num_children; 
+        printf("making child %u...\n", num_children);
+        fflush(stdout);
+        // try fork
+        if ((children[num_children].pid = fork()) == -1)
+        {
+            fprintf(STDERROR, "error making fork\n");
+            exit(1);
+        }
+        // fork succeeded
+        else if (children[num_children].pid == 0)     
+        { 
+            // child's start of execution
+            child_fuchsian(num_children, LOW, CEILING); 
+        } 
+        // parent is reading only, close writing end of pipe in parent
+        close(children[num_children].pipes[PIPE_W]);    
+    }
+    // Only parent gets past the for loop
+
+    set_t *curveList = setInitWithRange(LOW, CEILING);
+    uint_fast8_t i = 0;
+    // Add root to curveList
+    for (i = 0; i < 4; i++)
+    {
+        if (setAdd(curveList, root[i]) < 0)
+        { exit(1); }
+    } 
+    // Receive fuchsian results from children and put them in curveList
+    receive_fuchsian_curvatures(num_children, curveList);
+
+#if DEBUGGING // debugging code
+    printf("curveList capacity:  %d\n", (int)setGetCapacity(curveList));
+    printf("curveList num_items: "NUMFORM"\n", setGetNumItems(curveList));
+    setPrint(curveList, 0);
+#endif
+    fflush(stdout);
+
+    printTime();
+    printf("Running genealogy\n");
+    fflush(stdout);
+    struct LinkedListArray *admissible = genealogy(root);
+
+    printTime();
+    printf("Running valuesOf\n");
+    fflush(stdout);
+    set_t *valuesOrbit = valuesOf(admissible);
+
+    llaDestroy(admissible);
+
+    printTime();
+    printf("Running testOrbit\n");
+    int isInOrbit = testOrbit(valuesOrbit, curveList, LOW, CEILING);
+    printf("testOrbit results: %s\n", isInOrbit ? "pass" : "fail");
+
+    printTime();
+    printf("Running path and compare\n");
+    fflush(stdout);
+    ll *nope = pathAndCompare(valuesOrbit, curveList, LOW, CEILING);
+
+    setDestroy(curveList);
+
+    // return curvatures missing from packing
+    return nope;
 }
 
-void main(void) {
+/********************
+ * Main             *
+ ********************/
 
-    int root[4] = {-1, 2, 2, 3};
-    int index = 0;
-    int ceiling = 1000000;
+/**
+ * Start of execution. Parses command line arguments and runs seek.
+ *
+ * Important variable declarations:
+ *     LOW
+ *     CEILING
+ *     root
+ */
+int main(int argc, char *argv[]) {
+    
+    time_t start_time;
+    time_t end_time;
 
+    // Record the start time
+    time(&start_time);
+
+    // exit if there are an incorrect number of arguments
+    if (argc < 6)
+    {
+        fprintf(stderr, "ERR: Incorrect number of arguments.\n");
+        fprintf(stderr, "Usage: acp curv1 curv2 curv3 curv4 ceiling optional_arg\n");
+        fprintf(stderr, "Example: acp -1 2 2 3 1000 stop_at_fuchsian\n");
+        return 1;
+    }
+
+    number root[4] = {0,0,0,0};
+
+    uint_fast8_t arg = 1;
+    // convert command line arguments to curvatures for roots
+    for (arg = 1; arg < 5; arg++)
+    {
+        root[arg-1] = (number)strtol(argv[arg], NULL, 10);
+    }
+
+    // find the lowest curvature in root
+    number index = 0;
+    number lowTemp = root[0];
+    for (index = 0; index < 4; index++)
+    {
+        if (root[index] < lowTemp) { lowTemp = root[index]; }
+    }
+
+    const number LOW = lowTemp;
+
+    // convert command line argument to number for ceiling
+    const number CEILING = (unumber)strtoll(argv[5], NULL, 10);
+
+    printf("==========\n");
     printf("Running seek with root {");
-    for (index = 0; index < 4; index++) { printf("%d,",root[index]); }
-    printf("} and ceiling %d\n", ceiling);
+    for (index = 0; index < 4; index++) { printf(NUMFORM",",root[index]); }
+    printf("} and ceiling %lld\n", CEILING);
 
-    struct LinkedList *results = seek(root, ceiling);
-    llPrint(results);
+    printTime();
 
-}  
+    fflush(stdout);
+
+    // run seek using the root quadruple
+    ll *results = seek(root, LOW, CEILING);
+    llPrint(results, 0);
+
+    printTime();
+
+    fflush(stdout);
+
+    llDestroy(results);
+
+    // Record the end time of execution and print the run time
+    time(&end_time);
+    printf("run time: %f\n==========\n", difftime(end_time, start_time));
+    
+    // Exit successfully
+    return 0;
+} 

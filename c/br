@@ -1,4 +1,4 @@
 #!/bin/bash
 # Build and run C code
 
-b && run
+b && run $1 $2 $3 $4 $5 $6 $7

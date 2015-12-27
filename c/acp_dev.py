@@ -1,6 +1,7 @@
+#!/usr/bin/python
 #import the deque class
 from collections import deque
-
+import sys
 
 #Global list of all curvatures in the packing
 CURVELIST = set()
@@ -47,6 +48,7 @@ def valuesOf(quadList):
     for ruple in quadList:
         for value in ruple:
             possible.add(value)
+    #print possible
     return possible
 
 # input: quad (a quadruple), orbit (list of admissible quadruples)
@@ -87,6 +89,7 @@ def genealogy(seed):
         # print("orbit: ", orbit)
         # print("newGeneration: ", newGeneration)
         ancestors.extend(newGeneration)
+    # print orbit
     return orbit
 
 # input: valList (admissible values of the packing), top (arbitrary limit)
@@ -99,6 +102,9 @@ def path(valList, top):
         for poss in valList:
             # print "Comparing " + str(i) + " (" + str(i % 24) + ")" + " and " + str(poss)
             if (i % 24) == poss:
+                # if i == 834:
+                    # print str(i) + " % 24 = " + str(i % 24)
+                    # print valList
                 # print "added"
                 could.add(i)
                 break
@@ -122,12 +128,23 @@ def seek(root, cap):
     valuesGlobal = path(valuesOrbit, cap)
     # print valuesGlobal
     nope = valuesGlobal.difference( CURVELIST )
+    # print nope
     missing =  list(nope)
     missing.sort()
     print missing
+    print "Length: " + str(len(missing))
     return missing
 
-seek([-1,2,2,3], 1000000)
+# seek([-1,2,2,3], 10000000)
+a=int(sys.argv[1])
+b=int(sys.argv[2])
+c=int(sys.argv[3])
+d=int(sys.argv[4])
+ceiling=int(sys.argv[5])
+
+seek([a,b,c,d], ceiling)
+# print CURVELIST
+# print " Length: " + str(len(CURVELIST))
 
 """
 import cProfile, pstats

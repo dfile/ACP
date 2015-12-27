@@ -1,4 +1,4 @@
 #!/bin/bash
 # Profile acp C code using gprof
 
-gprof acp gmon.out -p
+gprof acp.bin gmon.out -p

@@ -1,46 +1,43 @@
-# input: quad (a quadruple of curvatures)
+#import the deque class
+from collections import deque
+
+
+#Global list of all curvatures in the packing
+CURVELIST = set()
+
+# input: quad (a quadruple of curvatures), limit is the maximum curvature allowable
 # output: solutions (list of transformed quadruples)
 # function: this runs quadruples through the four transformations (one for each curvature), and records the new one only if the transformed curvature is bigger than the original (so a smaller circle in the packing)
-def transform(quad):
-    solutions = []
+# check to make sure the new curvature is under the limit
+def transform(quad, limit):
+    solutions = deque()
     a, b, c, d = quad[0], quad[1], quad[2], quad[3]
-    if (-a + (2 * (b + c + d))) > a:
-        aPrime = [(-a + (2 * (b + c + d))), b, c, d]
-        solutions.append(aPrime)
-    if (-b + (2 * (a + c + d))) > b:
-        bPrime = [a, (-b + (2 * (a + c + d))), c, d]
-        solutions.append(bPrime)
-    if (-c + (2 * (a + b + d))) > c:
-        cPrime = [a, b, (-c + (2 * (a + b + d))), d]
-        solutions.append(cPrime)
-    if (-d + (2 * (a + b + c))) > d:
-        dPrime = [a, b, c, (-d + (2 * (a + b + c)))]
-        solutions.append(dPrime)
+    twice = 2*( a + b + c + d)
+    
+    transformed = [0, 0, 0, 0]
+    transformed[0]= -3*a + twice
+    transformed[1]= -3*b + twice
+    transformed[2]= -3*c + twice
+    transformed[3]= -3*d + twice
+    
+    for i in range(4):
+        if quad[i] < transformed[i]< limit:
+            prime = quad[:]
+            prime[i] = transformed[i]
+            solutions.append(prime)
+            CURVELIST.add( transformed[i] )
+            
     return solutions
 
-# input: quadList (a list of quadruples), ceiling (the arbitrary limit we don't want to go above)
-# output: validQuads (list of quadruples where every curv is below the ceiling)
-def check(quadList, ceiling):
-    validQuads = []
-    for quadruple in quadList:
-        valid = True
-        for entry in quadruple:
-            if entry >= ceiling:
-                valid = False
-        if valid:
-            validQuads.append(quadruple)
-    return validQuads
 
 # input: root (the initial quadruple that defines the packing), limit (arbitrary limit on curvatures we don't want to go above)
 # output: ancestors (list of quadruples all below the limit)
 def fuchsian(root, limit):
-    ancestors = []
+    ancestors = deque()
     ancestors.append(root)
-    for parent in ancestors:
-        nextGen = transform(parent)
-        validGen = check(nextGen, limit)
-        ancestors.extend(validGen)
-    return ancestors
+    while( len( ancestors) > 0):
+        ancestors.extend( transform( ancestors.pop() , limit ) )
+    return #ancestors
 
 # input: quadList (list of quadruples)
 # output: actual (list of all the values of the input list)
@@ -50,8 +47,7 @@ def valuesOf(quadList):
     for ruple in quadList:
         for value in ruple:
             possible.add(value)
-    actual = list( possible )
-    return actual
+    return possible
 
 # input: quad (a quadruple), orbit (list of admissible quadruples)
 # output: solutions (latest generation of admissible quadruples), orbit (list of updated admissible quadruples)
@@ -96,12 +92,12 @@ def genealogy(seed):
 # input: valList (admissible values of the packing), top (arbitrary limit)
 # output: could (list of admissible values up to our arbitrary limit)
 def path(valList, top):
-    could = []
+    could = set()
     i = 0
     while i < top:
         for poss in valList:
             if (i % 24) == poss:
-                could.append(i)
+                could.add(i)
                 break
         i += 1
     return could
@@ -110,15 +106,17 @@ def path(valList, top):
 # output: gone (list of admissible values that DO NOT appear in the packing, though they should)
 # host function for the last block of code, finds gone, the list we're looking for
 def seek(root, cap):
+    print "running with ceiling " + str(cap) + " and root " + str( root )
     #vecRoot = vector(ZZ, root)
-    small = fuchsian(root, cap)
-    valuesPack = valuesOf(small)
+    for i in range(4):
+        CURVELIST.add(root[i])
+    fuchsian(root, cap)
     admissible = genealogy(root)
     #print("genealogy results:")
     #print(admissible)
     valuesOrbit = valuesOf(admissible)
     valuesGlobal = path(valuesOrbit, cap)
-    nope = set( valuesGlobal ).difference( valuesPack )
+    nope = valuesGlobal.difference( CURVELIST )
     missing =  list(nope)
     missing.sort()
     return missing

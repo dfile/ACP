@@ -1,4 +1,5 @@
 #!/bin/bash
 # build acp with dependencies, -g gdb capapbility, -pg gprof capability
 
-gcc -pg -o acp -g acp.c LinkedList.c LinkedListArray.c hashsetint.c
+# gcc -pg -o acp -g acp.c LinkedList.c LinkedListArray.c hashsetint.c
+gcc -Wall -pg -o acp.bin $1 -g acp.c LinkedList.c LinkedListArray.c set_t.c -pthread
