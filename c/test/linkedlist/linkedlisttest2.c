@@ -8,19 +8,19 @@ void main(void) {
     
     printf("Created a null linked list: ");
     struct LinkedList *list = NULL;
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Created an empty linked list: ");
     list = llInit();
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Created a null node. Appending null node to list: ");
     struct Node *nullNode = NULL;
     llAppend(list, nullNode);
-    llPrint(list);
+    llPrint(list, 0);
     printf("Pushing a null node onto list: ");
     llPush(list, nullNode);
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Creating a node with value of 5... ");
     struct Node *node = nodeInit();
@@ -30,40 +30,37 @@ void main(void) {
     printf("Created node. node->val = %d \n", node->val);
     printf("Appending node to list: ");
     llAppend(list, node);
-    llPrint(list);
+    llPrint(list, 0);
 
     printf("Pushed a bunch of nodes onto list: ");
     
     int i;
     
-    //printf("Starting for loop\n");
     for (i = 6; i < 10000; i++) {
-        //printf("--Beginning of for loop\n");
         struct Node *aNode = nodeInit();
         aNode->val = i;
         llPush(list, aNode);
-        //printf("%d th iteration. ", i);
-        //llPrint(list);
     }
     
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Popped node from front of list. ");
     printf("Node val = %d, ", llPop(list)->val);
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Popped node from back of list. ");
     printf("Node val = %d, ", llPopBack(list)->val);
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Popped all nodes from list, from both front and back: ");
     for (i = 0; i < 100000; i++) {
-        llPopBack(list);
-        llPop(list);
-        llPopBack(list);
+        struct Node *aNode = NULL;
+        aNode = llPopBack(list);
+        aNode = llPop(list);
+        aNode = llPopBack(list);
     }
     
-    llPrint(list);
+    llPrint(list, 0);
     
     printf("Popped another node from front of empty list. It should be null. Is it null? ");
     if (llPop(list) == NULL) {printf("Yes.\n");}
@@ -81,5 +78,5 @@ void main(void) {
         llPush(list, aNode);
     }
     
-    llPrint(list);
+    llPrint(list, 0);
 }
