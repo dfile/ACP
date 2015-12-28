@@ -170,7 +170,6 @@ struct Node* llPopBack(struct LinkedList *ll) {
             ll->len = ll->len - 1;
             struct Node *nodeToPop = ll->tail;
             ll->tail = ll->tail->prev;
-            ll->tail->next = NULL;
 
             nodeToPop->prev = NULL;
             nodeToPop->next = NULL;
